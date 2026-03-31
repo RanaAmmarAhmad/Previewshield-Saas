@@ -1,11 +1,133 @@
-import { Suspense, useRef, useState, Component, type ReactNode } from "react";
+import { Suspense, useRef, useState, useEffect, Component, type ReactNode } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars, Float, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { motion } from "framer-motion";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ShieldCheck, Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, User, Check, Pencil, Search } from "lucide-react";
+
+const LS_KEY = "ps_username";
+
+function DarkUsernameWidget() {
+  const [name, setName] = useState(() => localStorage.getItem(LS_KEY) || "");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) { setEditing(false); setDraft(name); }
+    };
+    if (editing) document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [editing, name]);
+
+  const save = () => {
+    const t = draft.trim();
+    if (t) { localStorage.setItem(LS_KEY, t); setName(t); }
+    setEditing(false);
+  };
+
+  return (
+    <div ref={wrapRef} className="relative">
+      {!editing ? (
+        <button onClick={() => { setDraft(name); setEditing(true); }}
+          className="flex items-center gap-2 h-8 px-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-sm text-white/70 hover:text-white"
+          title="Set your display name">
+          <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <span className="max-w-[90px] truncate font-medium">{name || "Set name"}</span>
+          <Pencil className="w-3 h-3 text-white/30 shrink-0" />
+        </button>
+      ) : (
+        <div className="flex items-center gap-1.5">
+          <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") { setEditing(false); setDraft(name); } }}
+            placeholder="Your name" autoComplete="off"
+            className="h-8 w-32 rounded-md bg-white/10 border border-white/20 text-white text-sm px-2 outline-none focus:border-indigo-400 placeholder-white/30" />
+          <button onClick={save} className="w-8 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white">
+            <Check className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Analytics Lookup Component ───────────────────────────────────────────
+
+function AnalyticsLookup() {
+  const [, navigate] = useLocation();
+  const [previewId, setPreviewId] = useState("");
+  const [ownerToken, setOwnerToken] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = previewId.trim();
+    const token = ownerToken.trim();
+    if (!id || !token) { setError("Both fields are required."); return; }
+    setError("");
+    navigate(`/dashboard?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`);
+  };
+
+  return (
+    <section className="py-16 relative overflow-hidden" style={{ background: "#06081a" }}>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[600px] h-[200px] bg-indigo-600/10 rounded-full blur-[80px]" />
+      </div>
+      <div className="container mx-auto px-4 md:px-6 relative">
+        <div className="max-w-2xl mx-auto">
+          {/* Label */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+              <BarChart2 className="w-4 h-4 text-indigo-400" />
+            </div>
+            <div>
+              <p className="text-xs text-indigo-400 font-semibold uppercase tracking-widest">Analytics Lookup</p>
+              <h2 className="text-white font-semibold text-lg leading-tight">Already shared a file? Check who viewed it.</h2>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <input
+                value={previewId}
+                onChange={e => { setPreviewId(e.target.value); setError(""); }}
+                placeholder="Preview ID"
+                autoComplete="off"
+                className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm px-4 outline-none focus:border-indigo-500 placeholder-white/30 transition-colors"
+              />
+            </div>
+            <div className="flex-1">
+              <input
+                value={ownerToken}
+                onChange={e => { setOwnerToken(e.target.value); setError(""); }}
+                placeholder="Tracking UID (owner token)"
+                autoComplete="off"
+                className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm px-4 outline-none focus:border-indigo-500 placeholder-white/30 transition-colors"
+              />
+            </div>
+            <button
+              type="submit"
+              className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 shrink-0"
+            >
+              <Search className="w-4 h-4" />
+              View Analytics
+            </button>
+          </form>
+          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+          <p className="text-white/30 text-xs mt-3">
+            Your Tracking UID was shown after you shared your file. It stays in your browser for easy access.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 // ─── WebGL Error Boundary ─────────────────────────────────────────────────
 
@@ -222,21 +344,28 @@ export default function Home() {
 
       {/* ─── Dark Navbar ─────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#06081a]/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <ShieldCheck className="w-6 h-6 text-indigo-400" />
             <span className="font-bold text-lg tracking-tight text-white">PreviewShield</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-8">
-            {["How It Works", "About", "Contact"].map((n) => (
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/dashboard" className="text-sm font-medium text-white/60 hover:text-white transition-colors flex items-center gap-1.5">
+              <BarChart2 className="w-3.5 h-3.5 text-indigo-400" />
+              Dashboard
+            </Link>
+            {["How It Works", "About"].map((n) => (
               <Link key={n} href={`/${n.toLowerCase().replace(/ /g, "-")}`} className="text-sm font-medium text-white/50 hover:text-white transition-colors">{n}</Link>
             ))}
           </nav>
-          <Link href="/share">
-            <button className="h-9 px-5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/30">
-              Share File
-            </button>
-          </Link>
+          <div className="hidden md:flex items-center gap-3">
+            <DarkUsernameWidget />
+            <Link href="/share">
+              <button className="h-9 px-5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/30">
+                Share File
+              </button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -381,6 +510,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* ─── Analytics Lookup ──────────────────────────────────── */}
+        <AnalyticsLookup />
 
         {/* ─── Feature Cards ─────────────────────────────────────── */}
         <section className="py-28 relative overflow-hidden" style={{ background: "#080b1e" }}>

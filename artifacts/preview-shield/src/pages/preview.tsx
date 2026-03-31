@@ -332,7 +332,7 @@ export default function Preview() {
               <div style={{ position: "absolute", inset: "-100px", display: "flex", flexWrap: "wrap", gap: "32px", transform: "rotate(-20deg)", opacity: 0.07, alignContent: "flex-start" }}>
                 {Array.from({ length: 80 }).map((_, i) => (
                   <span key={i} style={{ fontSize: "clamp(14px, 2vw, 22px)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: "white", whiteSpace: "nowrap", fontFamily: "system-ui, sans-serif" }}>
-                    {preview.freelancerName} · CONFIDENTIAL
+                    {preview.agencyName || preview.freelancerName || "PreviewShield"} · CONFIDENTIAL
                   </span>
                 ))}
               </div>
