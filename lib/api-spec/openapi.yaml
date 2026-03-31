@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: PreviewShield API - Secure file preview sharing platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: previews
+    description: Preview management operations
+  - name: visits
+    description: Visit tracking operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,208 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /previews:
+    post:
+      operationId: createPreview
+      tags: [previews]
+      summary: Create a new preview
+      description: Upload file metadata and create a shareable preview link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePreviewRequest"
+      responses:
+        "201":
+          description: Preview created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preview"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /previews/{id}:
+    get:
+      operationId: getPreview
+      tags: [previews]
+      summary: Get a preview by ID
+      description: Retrieve preview metadata for displaying to client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Preview found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreviewPublic"
+        "401":
+          description: Password required or incorrect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Preview not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /previews/{id}/visit:
+    post:
+      operationId: recordVisit
+      tags: [visits]
+      summary: Record a client visit
+      description: Log a client visit with IP and timestamp
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordVisitRequest"
+      responses:
+        "200":
+          description: Visit recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisitRecorded"
+        "404":
+          description: Preview not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /previews/{id}/visits:
+    get:
+      operationId: getPreviewVisits
+      tags: [visits]
+      summary: Get visits for a preview
+      description: Retrieve all recorded visits for a preview (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ownerToken
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Visits list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisitsList"
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Preview not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /previews/{id}/upload-url:
+    post:
+      operationId: getUploadUrl
+      tags: [previews]
+      summary: Get a pre-signed upload URL
+      description: Returns a URL to upload a file for the preview
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Upload URL generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "404":
+          description: Preview not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /previews/{id}/stats:
+    get:
+      operationId: getPreviewStats
+      tags: [previews]
+      summary: Get preview statistics
+      description: Get visit count and analytics for a preview
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ownerToken
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Preview stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreviewStats"
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Preview not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +239,238 @@ components:
       required:
         - status
 
+    CreatePreviewRequest:
+      type: object
+      properties:
+        freelancerName:
+          type: string
+        agencyName:
+          type: string
+          nullable: true
+        clientName:
+          type: string
+        fileName:
+          type: string
+        fileType:
+          type: string
+          enum: [image, pdf, video]
+        fileMimeType:
+          type: string
+        fileSize:
+          type: integer
+        password:
+          type: string
+          nullable: true
+        fileUrl:
+          type: string
+          nullable: true
+      required:
+        - freelancerName
+        - clientName
+        - fileName
+        - fileType
+        - fileMimeType
+        - fileSize
+
+    Preview:
+      type: object
+      properties:
+        id:
+          type: string
+        freelancerName:
+          type: string
+        agencyName:
+          type: string
+          nullable: true
+        clientName:
+          type: string
+        fileName:
+          type: string
+        fileType:
+          type: string
+        fileMimeType:
+          type: string
+        fileSize:
+          type: integer
+        fileUrl:
+          type: string
+          nullable: true
+        hasPassword:
+          type: boolean
+        previewUrl:
+          type: string
+        ownerToken:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - freelancerName
+        - clientName
+        - fileName
+        - fileType
+        - fileMimeType
+        - fileSize
+        - hasPassword
+        - previewUrl
+        - ownerToken
+        - createdAt
+
+    PreviewPublic:
+      type: object
+      properties:
+        id:
+          type: string
+        freelancerName:
+          type: string
+        agencyName:
+          type: string
+          nullable: true
+        clientName:
+          type: string
+        fileName:
+          type: string
+        fileType:
+          type: string
+        fileMimeType:
+          type: string
+        fileSize:
+          type: integer
+        fileUrl:
+          type: string
+          nullable: true
+        hasPassword:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - freelancerName
+        - clientName
+        - fileName
+        - fileType
+        - fileMimeType
+        - fileSize
+        - hasPassword
+        - createdAt
+
+    RecordVisitRequest:
+      type: object
+      properties:
+        userAgent:
+          type: string
+          nullable: true
+        referrer:
+          type: string
+          nullable: true
+      required: []
+
+    VisitRecorded:
+      type: object
+      properties:
+        success:
+          type: boolean
+        visitId:
+          type: string
+      required:
+        - success
+        - visitId
+
+    VisitsList:
+      type: object
+      properties:
+        visits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Visit"
+        total:
+          type: integer
+      required:
+        - visits
+        - total
+
+    Visit:
+      type: object
+      properties:
+        id:
+          type: string
+        previewId:
+          type: string
+        ipAddress:
+          type: string
+          nullable: true
+        userAgent:
+          type: string
+          nullable: true
+        referrer:
+          type: string
+          nullable: true
+        visitedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - previewId
+        - visitedAt
+
+    UploadUrlRequest:
+      type: object
+      properties:
+        fileName:
+          type: string
+        fileMimeType:
+          type: string
+      required:
+        - fileName
+        - fileMimeType
+
+    UploadUrlResponse:
+      type: object
+      properties:
+        uploadUrl:
+          type: string
+        fileUrl:
+          type: string
+      required:
+        - uploadUrl
+        - fileUrl
+
+    PreviewStats:
+      type: object
+      properties:
+        previewId:
+          type: string
+        totalVisits:
+          type: integer
+        uniqueIps:
+          type: integer
+        lastVisitAt:
+          type: string
+          format: date-time
+          nullable: true
+        recentVisits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Visit"
+      required:
+        - previewId
+        - totalVisits
+        - uniqueIps
+        - recentVisits
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message

@@ -1,0 +1,153 @@
+Build a professional SaaS-style web platform using Next.js (App Router) + Tailwind CSS + TypeScript.
+Platform name: PreviewShield
+Goal:
+A secure preview-sharing platform where freelancers upload files and generate protected preview links for clients. Clients can view files but cannot download them easily. Each preview shows a watermark with freelancer name and logs client visit info (IP, time).
+IMPORTANT:
+The UI must look like a real SaaS startup product, not an AI-generated landing page. Clean spacing, modern typography, subtle gradients, responsive layout, and professional UX hierarchy.
+SEO REQUIREMENTS:
+Implement full SEO optimization:
+metadata API (Next.js)
+OpenGraph tags
+structured metadata
+semantic HTML
+fast loading structure
+proper heading hierarchy
+sitemap-ready structure
+accessible components
+TECH STACK:
+Next.js App Router
+Tailwind CSS
+TypeScript
+React Server Components where appropriate
+Client components only when necessary
+PAGES REQUIRED:
+1️⃣ Home Page (/)
+Hero section
+Features section
+How it works section
+Benefits section
+Use cases (designers, editors, developers)
+CTA section
+Footer
+Hero message example:
+“Send secure previews to clients without risking file theft.”
+Add navbar:
+Logo
+Home
+How it Works
+About
+Contact
+Share File button
+2️⃣ Share File Page (/share)
+Form fields:
+Freelancer Name
+Agency Name (optional)
+Client Name
+Optional Password
+File Upload
+Upload button styled professionally
+After upload:
+Generate preview link
+Show copy button
+Show success state UI card
+3️⃣ Preview Page (/preview/[id])
+Displays file preview:
+If image → show image
+If PDF → show embedded viewer
+If video → show player
+Overlay watermark:
+Freelancer Name
+semi-transparent
+centered
+Disable:
+right click
+drag save
+Track:
+visitor IP
+visit timestamp
+4️⃣ About Page (/about)
+Explain platform mission:
+Protect freelancers from unpaid clients
+Secure preview workflow
+Privacy-first approach
+Add sections:
+Problem
+Solution
+Vision
+5️⃣ Contact Page (/contact)
+Form fields:
+Name
+Email
+Message
+Professional layout
+Include:
+email contact placeholder
+footer links
+6️⃣ How It Works Page (/how-it-works)
+Steps:
+Upload file
+Share preview link
+Client views securely
+Get notified instantly
+Use icon-based step cards
+NAVBAR REQUIREMENTS
+Sticky navbar
+Blur background
+Mobile responsive menu
+CTA button on right side:
+Share File
+FOOTER REQUIREMENTS
+Links:
+Home
+Share File
+How It Works
+Contact
+Privacy Policy
+Terms
+Add social placeholders
+DESIGN STYLE REQUIREMENTS
+Minimal
+Modern SaaS style
+Subtle gradients
+Rounded-xl components
+Soft shadows
+Professional typography scale
+No cartoonish UI
+No generic template appearance
+Use spacing similar to:
+Stripe
+Notion
+Vercel
+Linear
+STRUCTURE REQUIREMENTS
+Use App Router layout.tsx properly
+Create reusable components:
+Navbar
+Footer
+SectionContainer
+FeatureCard
+Button
+Input
+UploadBox
+PERFORMANCE REQUIREMENTS
+Use Next Image component
+Use dynamic imports where needed
+Avoid unnecessary client components
+EXTRA FEATURES
+Generate preview link after upload
+Watermark overlay component
+Copy-to-clipboard button
+Success toast UI
+Loading states
+Error states
+OUTPUT FORMAT
+Generate:
+folder structure
+page files
+components
+styles
+layout.tsx
+metadata setup
+Write production-quality code.
+No placeholder lorem ipsum text.
+Use meaningful content.
