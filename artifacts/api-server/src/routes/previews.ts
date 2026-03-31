@@ -131,6 +131,84 @@ router.post("/previews", async (req, res): Promise<void> => {
   });
 });
 
+router.get("/previews/dashboard", async (req, res): Promise<void> => {
+  const ownerToken = req.query.ownerToken as string;
+  if (!ownerToken) {
+    res.status(400).json({ error: "validation_error", message: "ownerToken is required" });
+    return;
+  }
+
+  const [preview] = await db
+    .select()
+    .from(previewsTable)
+    .where(eq(previewsTable.ownerToken, ownerToken));
+
+  if (!preview) {
+    res.status(404).json({ error: "not_found", message: "No preview found with that Tracking UID" });
+    return;
+  }
+
+  if (isExpired(preview)) {
+    deleteUploadedFile(preview.fileUrl);
+    await db.delete(previewsTable).where(eq(previewsTable.id, preview.id));
+    res.status(410).json({ error: "expired", message: "This preview has expired and been deleted" });
+    return;
+  }
+
+  const visits = await db
+    .select()
+    .from(visitsTable)
+    .where(eq(visitsTable.previewId, preview.id))
+    .orderBy(visitsTable.visitedAt);
+
+  const uniqueIps = new Set(visits.filter((v) => v.ipAddress).map((v) => v.ipAddress)).size;
+  const lastVisitAt = visits.length > 0 ? visits[visits.length - 1]!.visitedAt : null;
+
+  res.json({
+    previewId: preview.id,
+    freelancerName: preview.freelancerName,
+    agencyName: preview.agencyName ?? null,
+    fileName: preview.fileName,
+    fileType: preview.fileType,
+    hasPassword: !!preview.passwordHash,
+    createdAt: preview.createdAt,
+    expiresAt: preview.expiresAt ?? null,
+    previewUrl: `/preview/${preview.id}`,
+    totalVisits: visits.length,
+    uniqueIps,
+    lastVisitAt: lastVisitAt ?? null,
+    recentVisits: visits.map((v) => ({
+      id: v.id,
+      clientName: v.clientName ?? null,
+      ipAddress: v.ipAddress ?? null,
+      visitedAt: v.visitedAt,
+    })),
+  });
+});
+
+router.delete("/previews/delete", async (req, res): Promise<void> => {
+  const ownerToken = req.query.ownerToken as string;
+  if (!ownerToken) {
+    res.status(400).json({ error: "validation_error", message: "ownerToken is required" });
+    return;
+  }
+
+  const [preview] = await db
+    .select()
+    .from(previewsTable)
+    .where(eq(previewsTable.ownerToken, ownerToken));
+
+  if (!preview) {
+    res.status(404).json({ error: "not_found", message: "No preview found with that Tracking UID" });
+    return;
+  }
+
+  deleteUploadedFile(preview.fileUrl);
+  await db.delete(previewsTable).where(eq(previewsTable.id, preview.id));
+
+  res.json({ success: true, message: "Preview deleted successfully" });
+});
+
 router.get("/previews/:id", async (req, res): Promise<void> => {
   const params = GetPreviewParams.safeParse(req.params);
   if (!params.success) {

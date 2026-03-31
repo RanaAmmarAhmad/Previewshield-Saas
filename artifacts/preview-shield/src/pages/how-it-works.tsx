@@ -1,75 +1,88 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Upload, Link as LinkIcon, Eye, Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Upload, Link as LinkIcon, Eye, BarChart2 } from "lucide-react";
 import { Link } from "wouter";
 
 export default function HowItWorks() {
   const steps = [
     {
-      icon: <Upload className="w-8 h-8 text-indigo-500" />,
-      title: "1. Upload Your Work",
-      desc: "Connect your design, document, or video file. We handle the formatting to ensure it displays perfectly across all devices without requiring the client to download anything."
+      num: "01",
+      icon: <Upload className="w-7 h-7 text-indigo-400" />,
+      title: "Upload Your Work",
+      desc: "Upload any image, PDF, or video file up to 100 MB. You can also link an external URL. Everything is stored securely and never exposed to clients directly.",
+      color: "bg-indigo-500/10 border-indigo-500/20",
     },
     {
-      icon: <LinkIcon className="w-8 h-8 text-indigo-500" />,
-      title: "2. Generate Secure Link",
-      desc: "Set a password, add your client's name, and generate a unique, untraceable link. No sign-up required for your clients."
+      num: "02",
+      icon: <LinkIcon className="w-7 h-7 text-violet-400" />,
+      title: "Generate Secure Link",
+      desc: "Set an optional password, choose when the link expires (1 hour to never), and click generate. You receive a unique preview link and your private Tracking UID.",
+      color: "bg-violet-500/10 border-violet-500/20",
     },
     {
-      icon: <Eye className="w-8 h-8 text-indigo-500" />,
-      title: "3. Client Views Securely",
-      desc: "The client opens the link in our secure viewer. Right-click, drag-to-save, and easy copying are disabled. Your name is subtly watermarked across the work."
+      num: "03",
+      icon: <Eye className="w-7 h-7 text-blue-400" />,
+      title: "Client Views Securely",
+      desc: "The client enters their name, passes the optional password, and sees your work in a secure viewer. Files are served via short-lived encrypted tokens — no direct downloads.",
+      color: "bg-blue-500/10 border-blue-500/20",
     },
     {
-      icon: <Bell className="w-8 h-8 text-indigo-500" />,
-      title: "4. Get Notified",
-      desc: "Track exactly when the client views the file. Know instantly if they've seen your work, eliminating the 'I never got your email' excuse."
-    }
+      num: "04",
+      icon: <BarChart2 className="w-7 h-7 text-green-400" />,
+      title: "Track Every View",
+      desc: "Go to your Dashboard and enter your Tracking UID to see who viewed your file — their name, IP address, and exact timestamp. No excuses: you know when they looked.",
+      color: "bg-green-500/10 border-green-500/20",
+    },
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen" style={{ background: "#06081a", color: "#fff" }}>
       <Navbar />
-      
+
       <main className="flex-1">
-        <section className="pt-24 pb-16 bg-slate-50 dark:bg-slate-950">
-          <div className="container mx-auto px-4 md:px-6 text-center max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">How PreviewShield Works</h1>
-            <p className="text-xl text-muted-foreground">
+
+        {/* Header */}
+        <section className="pt-24 pb-16 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[700px] h-[300px] bg-indigo-700/15 rounded-full blur-[120px]" />
+          </div>
+          <div className="container mx-auto px-4 md:px-6 text-center max-w-3xl relative">
+            <p className="text-xs text-indigo-400 font-semibold uppercase tracking-widest mb-4">How It Works</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">Four simple steps</h1>
+            <p className="text-xl text-white/50">
               A streamlined workflow designed to keep your creative assets safe while looking incredibly professional to your clients.
             </p>
           </div>
         </section>
 
-        <section className="py-20">
+        {/* Steps */}
+        <section className="py-16 pb-24" style={{ background: "#080b1e" }}>
           <div className="container mx-auto px-4 md:px-6 max-w-5xl">
-            <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
-              {steps.map((step, idx) => (
-                <div key={idx} className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent dark:from-indigo-950/50 dark:to-transparent rounded-3xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="p-8 border border-transparent group-hover:border-indigo-100 dark:group-hover:border-indigo-900/50 rounded-3xl transition-all">
-                    <div className="w-16 h-16 bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center justify-center mb-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {steps.map((step) => (
+                <div key={step.num} className="rounded-2xl border border-white/10 bg-white/5 p-8 hover:bg-white/[0.07] transition-colors">
+                  <div className="flex items-start gap-4 mb-5">
+                    <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shrink-0 ${step.color}`}>
                       {step.icon}
                     </div>
-                    <h3 className="text-2xl font-semibold mb-4">{step.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed text-lg">
-                      {step.desc}
-                    </p>
+                    <span className="text-5xl font-black text-white/5 leading-none mt-1">{step.num}</span>
                   </div>
+                  <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                  <p className="text-white/50 leading-relaxed">{step.desc}</p>
                 </div>
               ))}
             </div>
-            
-            <div className="mt-24 text-center">
+
+            <div className="mt-16 text-center">
               <Link href="/share">
-                <Button size="lg" className="h-14 px-10 text-lg bg-gradient-accent text-white border-0 shadow-lg hover:shadow-indigo-500/25">
-                  Try it now
-                </Button>
+                <button className="h-14 px-10 text-lg rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-all shadow-xl shadow-indigo-500/20">
+                  Try it for free
+                </button>
               </Link>
             </div>
           </div>
         </section>
+
       </main>
 
       <Footer />

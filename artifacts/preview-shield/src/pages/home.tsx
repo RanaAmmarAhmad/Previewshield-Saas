@@ -62,17 +62,15 @@ function DarkUsernameWidget() {
 
 function AnalyticsLookup() {
   const [, navigate] = useLocation();
-  const [previewId, setPreviewId] = useState("");
   const [ownerToken, setOwnerToken] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const id = previewId.trim();
     const token = ownerToken.trim();
-    if (!id || !token) { setError("Both fields are required."); return; }
+    if (!token) { setError("Please enter your Tracking UID."); return; }
     setError("");
-    navigate(`/dashboard?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`);
+    navigate(`/dashboard?token=${encodeURIComponent(token)}`);
   };
 
   return (
@@ -96,18 +94,9 @@ function AnalyticsLookup() {
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <input
-                value={previewId}
-                onChange={e => { setPreviewId(e.target.value); setError(""); }}
-                placeholder="Preview ID"
-                autoComplete="off"
-                className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm px-4 outline-none focus:border-indigo-500 placeholder-white/30 transition-colors"
-              />
-            </div>
-            <div className="flex-1">
-              <input
                 value={ownerToken}
                 onChange={e => { setOwnerToken(e.target.value); setError(""); }}
-                placeholder="Tracking UID (owner token)"
+                placeholder="Paste your Tracking UID..."
                 autoComplete="off"
                 className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm px-4 outline-none focus:border-indigo-500 placeholder-white/30 transition-colors"
               />

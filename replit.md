@@ -2,7 +2,7 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. PreviewShield is a secure file preview sharing platform for freelancers.
+pnpm workspace monorepo using TypeScript. PreviewShield is a professional SaaS platform for secure file preview sharing — freelancers upload files, generate share links with optional password and expiry, and clients view watermarked, copy-protected previews. Full analytics via Tracking UID (ownerToken). Built by Rana Ammar Ahmad Khan.
 
 ## Stack
 

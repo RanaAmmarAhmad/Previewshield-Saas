@@ -217,13 +217,13 @@ export default function Share() {
   const isSubmitting = isUploading || createPreview.isPending;
 
   if (successData) {
-    const dashboardUrl = `/dashboard?id=${successData.id}&token=${successData.ownerToken}`;
+    const dashboardUrl = `/dashboard?token=${successData.ownerToken}`;
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div className="flex flex-col min-h-screen" style={{ background: "#06081a" }}>
         <Navbar />
         <main className="flex-1 container mx-auto px-4 py-12 md:py-24">
           <div className="max-w-2xl mx-auto">
-            <Card className="shadow-2xl border-indigo-100 dark:border-indigo-900/50 bg-white dark:bg-slate-900">
+            <Card className="shadow-2xl border-white/10 bg-white/5 text-white backdrop-blur-sm">
               <CardHeader className="text-center pb-2">
                 <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mb-4">
                   <Check className="w-8 h-8" />
@@ -305,18 +305,18 @@ export default function Share() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex flex-col min-h-screen" style={{ background: "#06081a", color: "#fff" }}>
       <Navbar />
 
       <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-2xl mx-auto">
 
           <div className="mb-10 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">Create Secure Preview</h1>
-            <p className="text-muted-foreground text-lg">Generate a protected, view-only link for your client.</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight text-white">Create Secure Preview</h1>
+            <p className="text-white/50 text-lg">Generate a protected, view-only link for your client.</p>
           </div>
 
-          <Card className="shadow-xl border-slate-200/60 dark:border-slate-800">
+          <Card className="shadow-xl border-white/10 bg-white/5 text-white backdrop-blur-sm">
             <CardContent className="pt-6">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
