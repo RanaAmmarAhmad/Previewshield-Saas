@@ -275,16 +275,16 @@ export default function Home() {
       <main className="flex-1">
 
         {/* ─── Hero ──────────────────────────────────────────────── */}
-        <section className="relative min-h-screen sm:min-h-[92vh] flex items-start sm:items-center overflow-hidden pt-14 sm:pt-8">
+        <section className="relative sm:min-h-[92vh] flex items-center overflow-hidden py-10 sm:py-0">
           {/* Background glow */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-indigo-700/20 rounded-full blur-[120px]" />
-            <div className="absolute right-40 top-1/3 w-[400px] h-[400px] bg-violet-700/15 rounded-full blur-[100px]" />
-            <div className="absolute left-20 bottom-0 w-[300px] h-[300px] bg-indigo-900/20 rounded-full blur-[80px]" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-700/20 rounded-full blur-[120px]" />
+            <div className="absolute right-40 top-1/3 w-[350px] h-[350px] bg-violet-700/15 rounded-full blur-[100px]" />
           </div>
 
-          <div className="container mx-auto px-4 md:px-6 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="container mx-auto px-4 md:px-6 relative z-10 w-full">
+            {/* Mobile: stacked layout */}
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
               {/* Left — Text */}
               <div>
@@ -292,11 +292,11 @@ export default function Home() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-medium mb-8"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs sm:text-sm font-medium mb-4 sm:mb-6"
                 >
-                  <span className="relative flex h-2 w-2">
+                  <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-400"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-400"></span>
                   </span>
                   Trusted by 10,000+ freelancers
                 </motion.div>
@@ -306,7 +306,7 @@ export default function Home() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-5"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-3 sm:mb-5"
                 >
                   Share files.{" "}
                   <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
@@ -319,7 +319,7 @@ export default function Home() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="text-lg text-white/55 leading-relaxed mb-10 max-w-lg"
+                  className="text-sm sm:text-lg text-white/55 leading-relaxed mb-5 sm:mb-8 max-w-lg"
                 >
                   The professional layer between your creative work and untrustworthy clients. Watermarked, view-only previews with full analytics — no downloads, no theft.
                 </motion.p>
@@ -329,16 +329,16 @@ export default function Home() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="flex flex-row flex-wrap items-center gap-3"
+                  className="flex flex-row items-center gap-2 sm:gap-3"
                 >
                   <Link href="/share">
-                    <button className="group inline-flex items-center gap-2 h-11 px-6 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
+                    <button className="group inline-flex items-center gap-1.5 h-9 sm:h-11 px-5 sm:px-6 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
                       Start for Free
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </Link>
                   <Link href="/how-it-works">
-                    <button className="h-11 px-5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition-all">
+                    <button className="h-9 sm:h-11 px-4 sm:px-5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold text-xs sm:text-sm transition-all">
                       How It Works
                     </button>
                   </Link>
@@ -350,26 +350,26 @@ export default function Home() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="flex items-center gap-6 mt-10"
+                  className="flex items-center gap-5 sm:gap-6 mt-6 sm:mt-10"
                 >
                   {[
-                    { n: "10K+", label: "Active freelancers" },
+                    { n: "10K+", label: "Freelancers" },
                     { n: "500K+", label: "Previews sent" },
                     { n: "99.9%", label: "Uptime" },
                   ].map((s) => (
                     <div key={s.n}>
-                      <p className="text-2xl font-black text-white">{s.n}</p>
-                      <p className="text-xs text-white/40 font-medium">{s.label}</p>
+                      <p className="text-xl sm:text-2xl font-black text-white">{s.n}</p>
+                      <p className="text-[10px] sm:text-xs text-white/40 font-medium">{s.label}</p>
                     </div>
                   ))}
                 </motion.div>
               </div>
 
-              {/* Right — 3D Canvas (responsive on all screens) */}
-              <div className="relative h-[260px] sm:h-[380px] md:h-[420px] lg:h-[580px] block">
+              {/* Right — 3D Canvas */}
+              <div className="relative h-[200px] sm:h-[360px] md:h-[420px] lg:h-[560px]">
                 {webgl ? (
                   <WebGLErrorBoundary fallback={<CSS3DFallback />}>
-                    <Canvas camera={{ position: [0, 0, 5.5], fov: 50 }} style={{ borderRadius: "1.5rem" }}>
+                    <Canvas camera={{ position: [0, 0, 5.5], fov: 50 }} style={{ borderRadius: "1.25rem" }}>
                       <Suspense fallback={null}>
                         <Scene3D />
                       </Suspense>
@@ -379,35 +379,50 @@ export default function Home() {
                   <CSS3DFallback />
                 )}
 
-                {/* Floating cards overlaid on canvas */}
-                <FloatingCard
-                  icon={<Eye className="w-4 h-4" />}
-                  label="Views Tracked"
-                  value="Real-time"
-                  delay={1.0}
-                  className="top-4 sm:top-8 right-2 sm:right-0 min-w-[130px] sm:min-w-[160px]"
-                />
-                <FloatingCard
-                  icon={<Lock className="w-4 h-4" />}
-                  label="Copy Protected"
-                  value="Always On"
-                  delay={1.2}
-                  className="bottom-16 sm:bottom-24 right-2 sm:right-0 min-w-[130px] sm:min-w-[160px]"
-                />
-                <FloatingCard
-                  icon={<BarChart2 className="w-4 h-4" />}
-                  label="Analytics"
-                  value="Name · IP · City"
-                  delay={1.4}
-                  className="bottom-2 sm:bottom-4 left-1 sm:left-2 min-w-[140px] sm:min-w-[180px]"
-                />
-                <FloatingCard
-                  icon={<Clock className="w-4 h-4" />}
-                  label="Auto Expiry"
-                  value="24h Default"
-                  delay={1.6}
-                  className="top-4 sm:top-12 left-1 sm:left-2 min-w-[130px] sm:min-w-[160px]"
-                />
+                {/* Floating cards — hidden on mobile, shown sm+ */}
+                <div className="hidden sm:block">
+                  <FloatingCard
+                    icon={<Eye className="w-4 h-4" />}
+                    label="Views Tracked"
+                    value="Real-time"
+                    delay={1.0}
+                    className="top-8 right-0 min-w-[150px]"
+                  />
+                  <FloatingCard
+                    icon={<Lock className="w-4 h-4" />}
+                    label="Copy Protected"
+                    value="Always On"
+                    delay={1.2}
+                    className="bottom-24 right-0 min-w-[150px]"
+                  />
+                  <FloatingCard
+                    icon={<BarChart2 className="w-4 h-4" />}
+                    label="Analytics"
+                    value="Name · IP · City"
+                    delay={1.4}
+                    className="bottom-4 left-2 min-w-[170px]"
+                  />
+                  <FloatingCard
+                    icon={<Clock className="w-4 h-4" />}
+                    label="Auto Expiry"
+                    value="24h Default"
+                    delay={1.6}
+                    className="top-12 left-2 min-w-[150px]"
+                  />
+                </div>
+
+                {/* Mobile-only: two compact stat pills below canvas */}
+                <div className="flex sm:hidden justify-center gap-2 mt-2">
+                  {[
+                    { icon: <Eye className="w-3 h-3" />, label: "Real-time views" },
+                    { icon: <Lock className="w-3 h-3" />, label: "Copy protected" },
+                  ].map((p, i) => (
+                    <div key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/60 text-[10px] font-medium">
+                      <span className="text-indigo-400">{p.icon}</span>
+                      {p.label}
+                    </div>
+                  ))}
+                </div>
               </div>
 
             </div>
@@ -435,7 +450,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="text-4xl md:text-5xl font-black text-white mb-5"
+                className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-3 sm:mb-5"
               >
                 Built to protect your work
               </motion.h2>
@@ -444,7 +459,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-white/50 text-lg"
+                className="text-white/50 text-sm sm:text-lg"
               >
                 Every feature designed to keep your creative assets safe before payment lands.
               </motion.p>
@@ -530,21 +545,21 @@ export default function Home() {
         {/* ─── Use Cases / Who is it for ─────────────────────────── */}
         <section className="py-14 sm:py-20 md:py-28 overflow-hidden" style={{ background: "#06081a" }}>
           <div className="container mx-auto px-4 md:px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center max-w-6xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, x: -40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.7 }}
               >
-                <p className="text-indigo-400 font-semibold text-sm tracking-widest uppercase mb-4">Who it's for</p>
-                <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+                <p className="text-indigo-400 font-semibold text-xs sm:text-sm tracking-widest uppercase mb-3 sm:mb-4">Who it's for</p>
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6">
                   Built for creative{" "}
                   <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
                     professionals
                   </span>
                 </h2>
-                <p className="text-lg text-white/50 mb-10 leading-relaxed">
+                <p className="text-sm sm:text-lg text-white/50 mb-6 sm:mb-10 leading-relaxed">
                   Whether you're delivering a brand identity, a motion reel, or a proposal draft — PreviewShield keeps you in control until payment clears.
                 </p>
                 <ul className="space-y-5">
@@ -745,10 +760,10 @@ export default function Home() {
               transition={{ duration: 0.7 }}
             >
               <p className="text-indigo-400 font-semibold text-sm tracking-widest uppercase mb-4">Get started free</p>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 sm:mb-6 leading-tight">
                 Stop giving away your work before getting paid.
               </h2>
-              <p className="text-xl text-white/50 mb-10">
+              <p className="text-sm sm:text-xl text-white/50 mb-6 sm:mb-10">
                 Join thousands of freelancers who use PreviewShield to protect their deliverables, track viewers, and close deals safely.
               </p>
               <Link href="/share">
