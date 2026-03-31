@@ -56,18 +56,38 @@ export default function Preview() {
     }
   }, [preview, needsPassword, wrongPassword, step, id, clientName, password, recordVisit]);
 
-  // Security: block right-click, drag, selection, and print — but NOT DevTools
+  // Security: block right-click, drag, selection, keyboard shortcuts, and print
   useEffect(() => {
     const noContextMenu = (e: MouseEvent) => e.preventDefault();
     const noDragStart = (e: DragEvent) => e.preventDefault();
     const noSelect = (e: Event) => e.preventDefault();
+
+    const noKeys = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      const ctrl = e.ctrlKey || e.metaKey;
+      // Block: Ctrl+S (save), Ctrl+U (view source), Ctrl+P (print),
+      //        Ctrl+A (select all), Ctrl+C (copy), Ctrl+Shift+I/J/C (devtools),
+      //        F12 (devtools), PrintScreen
+      if (ctrl && ["s", "u", "p", "a", "c"].includes(k)) { e.preventDefault(); e.stopPropagation(); return; }
+      if (ctrl && e.shiftKey && ["i", "j", "c"].includes(k)) { e.preventDefault(); e.stopPropagation(); return; }
+      if (k === "f12" || k === "printscreen") { e.preventDefault(); e.stopPropagation(); return; }
+    };
+
     document.addEventListener("contextmenu", noContextMenu);
     document.addEventListener("dragstart", noDragStart);
     document.addEventListener("selectstart", noSelect);
+    document.addEventListener("keydown", noKeys, true);
+
+    // Developer console warning
+    const warnMsg = "%c🔒 PreviewShield — Protected Content\n%cThis file is confidential. Every action on this page is logged.\nYour IP address and identity have been recorded.";
+    console.log(warnMsg, "color:#f87171;font-size:20px;font-weight:bold;", "color:#fca5a5;font-size:13px;");
+    console.log("%cAttempting to extract or copy this content is a violation of the terms of service.", "color:#fca5a5;font-size:12px;");
+
     return () => {
       document.removeEventListener("contextmenu", noContextMenu);
       document.removeEventListener("dragstart", noDragStart);
       document.removeEventListener("selectstart", noSelect);
+      document.removeEventListener("keydown", noKeys, true);
     };
   }, []);
 
@@ -263,9 +283,22 @@ export default function Preview() {
   return (
     <>
       <style>{`
-        @media print { body { display: none !important; } }
-        * { -webkit-user-select: none !important; -moz-user-select: none !important; user-select: none !important; }
-        img, video { pointer-events: none !important; -webkit-user-drag: none !important; }
+        @media print {
+          body { display: none !important; visibility: hidden !important; }
+          * { display: none !important; }
+        }
+        * {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          user-select: none !important;
+          -webkit-touch-callout: none !important;
+        }
+        img, video {
+          pointer-events: none !important;
+          -webkit-user-drag: none !important;
+        }
+        ::-webkit-scrollbar { display: none; }
+        ::selection { background: transparent !important; }
       `}</style>
 
       <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50" style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}>
