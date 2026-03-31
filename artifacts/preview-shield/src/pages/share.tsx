@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Navbar } from "@/components/Navbar";
+import { Navbar, saveFileHistory } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useCreatePreview } from "@workspace/api-client-react";
 import { Form, FormField } from "@/components/ui/form";
@@ -175,6 +175,12 @@ export default function Share() {
     createPreview.mutate({ data: { freelancerName: data.freelancerName, agencyName: data.agencyName || null, fileName: resolvedFileName, fileType: resolvedFileType, fileUrl: resolvedFileUrl, password: data.password || null, fileMimeType: resolvedMimeType, fileSize: resolvedFileSize, expiresInHours } as any }, {
       onSuccess: (response) => {
         localStorage.setItem(LS_KEY, data.freelancerName);
+        saveFileHistory({
+          id: response.id,
+          ownerToken: (response as any).ownerToken,
+          fileName: resolvedFileName,
+          fileType: resolvedFileType,
+        });
         const url = new URL(`/preview/${response.id}`, window.location.origin).toString();
         setSuccessData({ url, id: response.id, ownerToken: (response as any).ownerToken, expiresAt: (response as any).expiresAt ?? null });
       },

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,6 +12,10 @@ export const visitsTable = pgTable("visits", {
   city: text("city"),
   region: text("region"),
   country: text("country"),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
+  timezone: text("timezone"),
+  isp: text("isp"),
   visitedAt: timestamp("visited_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

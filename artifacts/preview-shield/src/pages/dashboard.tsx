@@ -44,6 +44,10 @@ type Visit = {
   city: string | null;
   region: string | null;
   country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  timezone: string | null;
+  isp: string | null;
   visitedAt: string;
 };
 
@@ -286,11 +290,35 @@ export default function Dashboard() {
                               </p>
                               <span className="text-xs text-white/25 shrink-0">{relativeTime(visit.visitedAt)}</span>
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
                               {loc && (
-                                <span className="flex items-center gap-1 text-xs text-white/40">
-                                  <MapPin className="w-3 h-3 text-indigo-400/60" />{loc}
+                                visit.latitude && visit.longitude ? (
+                                  <a
+                                    href={`https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                                    title={`${visit.latitude?.toFixed(4)}, ${visit.longitude?.toFixed(4)}`}
+                                  >
+                                    <MapPin className="w-3 h-3" />{loc}
+                                  </a>
+                                ) : (
+                                  <span className="flex items-center gap-1 text-xs text-white/40">
+                                    <MapPin className="w-3 h-3 text-indigo-400/60" />{loc}
+                                  </span>
+                                )
+                              )}
+                              {visit.latitude && visit.longitude && (
+                                <span className="text-[10px] text-white/20 font-mono">
+                                  {visit.latitude.toFixed(3)}°, {visit.longitude.toFixed(3)}°
                                 </span>
+                              )}
+                              {visit.timezone && (
+                                <span className="text-[10px] text-white/25 flex items-center gap-0.5">
+                                  <Clock className="w-2.5 h-2.5" />{visit.timezone}
+                                </span>
+                              )}
+                              {visit.isp && (
+                                <span className="text-[10px] text-white/20 truncate max-w-[120px]">{visit.isp}</span>
                               )}
                               {visit.ipAddress && (
                                 <span className="flex items-center gap-1 text-xs text-white/25">

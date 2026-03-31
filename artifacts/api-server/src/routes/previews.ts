@@ -348,16 +348,30 @@ router.post("/previews/:id/visit", async (req, res): Promise<void> => {
   let city: string | null = null;
   let region: string | null = null;
   let country: string | null = null;
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+  let timezone: string | null = null;
+  let isp: string | null = null;
 
-  if (ipAddress && ipAddress !== "::1" && !ipAddress.startsWith("127.") && !ipAddress.startsWith("192.168.")) {
+  if (ipAddress && ipAddress !== "::1" && !ipAddress.startsWith("127.") && !ipAddress.startsWith("192.168.") && !ipAddress.startsWith("10.")) {
     try {
-      const geoRes = await fetch(`http://ip-api.com/json/${ipAddress}?fields=status,city,regionName,country`, { signal: AbortSignal.timeout(3000) });
+      const geoRes = await fetch(
+        `http://ip-api.com/json/${ipAddress}?fields=status,city,regionName,country,lat,lon,timezone,isp`,
+        { signal: AbortSignal.timeout(4000) }
+      );
       if (geoRes.ok) {
-        const geo = await geoRes.json() as { status: string; city?: string; regionName?: string; country?: string };
+        const geo = await geoRes.json() as {
+          status: string; city?: string; regionName?: string; country?: string;
+          lat?: number; lon?: number; timezone?: string; isp?: string;
+        };
         if (geo.status === "success") {
           city = geo.city ?? null;
           region = geo.regionName ?? null;
           country = geo.country ?? null;
+          latitude = geo.lat ?? null;
+          longitude = geo.lon ?? null;
+          timezone = geo.timezone ?? null;
+          isp = geo.isp ?? null;
         }
       }
     } catch {
@@ -376,6 +390,10 @@ router.post("/previews/:id/visit", async (req, res): Promise<void> => {
     city,
     region,
     country,
+    latitude,
+    longitude,
+    timezone,
+    isp,
   });
 
   res.json({ success: true, visitId });
@@ -423,6 +441,13 @@ router.get("/previews/:id/visits", async (req, res): Promise<void> => {
       ipAddress: v.ipAddress ?? null,
       userAgent: v.userAgent ?? null,
       referrer: v.referrer ?? null,
+      city: v.city ?? null,
+      region: v.region ?? null,
+      country: v.country ?? null,
+      latitude: v.latitude ?? null,
+      longitude: v.longitude ?? null,
+      timezone: v.timezone ?? null,
+      isp: v.isp ?? null,
       visitedAt: v.visitedAt,
     })),
     total: visits.length,
@@ -478,6 +503,13 @@ router.get("/previews/:id/stats", async (req, res): Promise<void> => {
       ipAddress: v.ipAddress ?? null,
       userAgent: v.userAgent ?? null,
       referrer: v.referrer ?? null,
+      city: v.city ?? null,
+      region: v.region ?? null,
+      country: v.country ?? null,
+      latitude: v.latitude ?? null,
+      longitude: v.longitude ?? null,
+      timezone: v.timezone ?? null,
+      isp: v.isp ?? null,
       visitedAt: v.visitedAt,
     })),
   });

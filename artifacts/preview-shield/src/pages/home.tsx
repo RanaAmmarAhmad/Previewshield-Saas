@@ -2,15 +2,12 @@ import { Suspense, useRef, useState, useEffect, Component, type ReactNode, useCa
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars, Float, Environment } from "@react-three/drei";
 import * as THREE from "three";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
-import { Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, Search, MapPin, Maximize2, Minimize2, Crown, Shield, Wifi } from "lucide-react";
+import { Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, Search, MapPin, Maximize2, Minimize2, Shield, Wifi } from "lucide-react";
 import { LogoIcon } from "@/components/Logo";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-
-const LS_KEY = "ps_username";
-
 
 // ─── Analytics Lookup Component ───────────────────────────────────────────
 
@@ -273,22 +270,6 @@ export default function Home() {
   const webgl = useWebGLSupport();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [username, setUsername] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(LS_KEY) || "" : ""));
-  const [planTagVisible, setPlanTagVisible] = useState(() => !!(typeof window !== "undefined" && localStorage.getItem(LS_KEY)));
-
-  useEffect(() => {
-    const onStorage = () => {
-      const name = localStorage.getItem(LS_KEY) || "";
-      setUsername(name);
-      if (name) setPlanTagVisible(true);
-    };
-    window.addEventListener("storage", onStorage);
-    const interval = setInterval(() => {
-      const name = localStorage.getItem(LS_KEY) || "";
-      if (name !== username) { setUsername(name); if (name) setPlanTagVisible(true); }
-    }, 800);
-    return () => { window.removeEventListener("storage", onStorage); clearInterval(interval); };
-  }, [username]);
 
   useEffect(() => {
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -302,10 +283,6 @@ export default function Home() {
     } else {
       document.exitFullscreen().catch(() => {});
     }
-  }, []);
-
-  const handleGetStarted = useCallback(() => {
-    setPlanTagVisible(true);
   }, []);
 
   return (
@@ -371,7 +348,7 @@ export default function Home() {
                   className="flex flex-row items-center gap-2 sm:gap-3"
                 >
                   <Link href="/share">
-                    <button onClick={handleGetStarted} className="group inline-flex items-center gap-1.5 h-9 sm:h-11 px-5 sm:px-6 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
+                    <button className="group inline-flex items-center gap-1.5 h-9 sm:h-11 px-5 sm:px-6 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
                       Start for Free
                       <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
@@ -457,25 +434,6 @@ export default function Home() {
                   <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-indigo-400" />
                   <span className="text-indigo-300">Shield Active</span>
                 </motion.div>
-
-                {/* Bottom-right: Current Plan tag — visible when user is known */}
-                <AnimatePresence>
-                  {planTagVisible && (
-                    <motion.div
-                      key="plan-tag"
-                      initial={{ opacity: 0, scale: 0.85, y: 8 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.85 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                      className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/10 border border-amber-500/30 backdrop-blur-md text-[9px] sm:text-[10px] font-bold"
-                    >
-                      <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400" />
-                      <span className="text-amber-300">
-                        {username ? `${username.split(" ")[0]} · ` : ""}Free Plan
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 {/* Floating cards — hidden on mobile, shown sm+ */}
                 <div className="hidden sm:block">
