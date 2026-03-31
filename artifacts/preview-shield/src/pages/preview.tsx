@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetPreview, useRecordVisit } from "@workspace/api-client-react";
-import { ShieldCheck, Lock, Loader2, AlertCircle } from "lucide-react";
+import { ShieldCheck, Lock, Loader2, AlertCircle, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,68 +10,102 @@ import { useState, useEffect, useRef } from "react";
 export default function Preview() {
   const params = useParams();
   const id = params.id as string;
-  
+
   const [password, setPassword] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [needsPassword, setNeedsPassword] = useState(false);
-  
+  const [devtoolsOpen, setDevtoolsOpen] = useState(false);
+
   const recordVisit = useRecordVisit();
   const recordedRef = useRef(false);
 
-  // We conditionally pass password if required
   const { data: preview, isLoading, isError, error } = useGetPreview(
-    id, 
-    { password: password || undefined }, 
-    { 
-      query: { 
+    id,
+    { password: password || undefined },
+    {
+      query: {
         enabled: !!id,
         retry: false,
-        queryKey: ["getPreview", id, password]
-      } 
+        queryKey: ["getPreview", id, password],
+      },
     }
   );
 
   useEffect(() => {
-    // Error handling for password
     if (error && (error as any)?.status === 401) {
       setNeedsPassword(true);
     } else if (preview && preview.hasPassword && !password) {
       setNeedsPassword(true);
     } else if (preview) {
       setNeedsPassword(false);
-      
-      // Record visit once loaded
       if (!recordedRef.current) {
         recordedRef.current = true;
         recordVisit.mutate({
           id,
-          data: {
-            userAgent: navigator.userAgent,
-            referrer: document.referrer
-          }
+          data: { userAgent: navigator.userAgent, referrer: document.referrer },
         });
       }
     }
   }, [preview, error, id, password, recordVisit]);
 
+  // ─── Security Layer ────────────────────────────────────────────────────────
+  useEffect(() => {
+    // 1. Block right-click
+    const noContextMenu = (e: MouseEvent) => e.preventDefault();
+    // 2. Block drag
+    const noDragStart = (e: DragEvent) => e.preventDefault();
+    // 3. Block print
+    const noPrint = (e: KeyboardEvent) => {
+      const key = e.key?.toLowerCase();
+      const ctrl = e.ctrlKey || e.metaKey;
+      // F12 / DevTools shortcuts / Print / Save / Select All / Copy / Inspect
+      if (
+        e.key === "F12" ||
+        (ctrl && e.shiftKey && (key === "i" || key === "j" || key === "c")) ||
+        (ctrl && (key === "u" || key === "s" || key === "p" || key === "a")) ||
+        e.key === "PrintScreen"
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    // 4. Block selection globally on this page
+    const noSelect = (e: Event) => e.preventDefault();
+
+    document.addEventListener("contextmenu", noContextMenu);
+    document.addEventListener("dragstart", noDragStart);
+    document.addEventListener("keydown", noPrint, true);
+    document.addEventListener("selectstart", noSelect);
+
+    return () => {
+      document.removeEventListener("contextmenu", noContextMenu);
+      document.removeEventListener("dragstart", noDragStart);
+      document.removeEventListener("keydown", noPrint, true);
+      document.removeEventListener("selectstart", noSelect);
+    };
+  }, []);
+
+  // 5. DevTools detection via window size heuristic
+  useEffect(() => {
+    const THRESHOLD = 160;
+    const check = () => {
+      const widthDiff = window.outerWidth - window.innerWidth;
+      const heightDiff = window.outerHeight - window.innerHeight;
+      setDevtoolsOpen(widthDiff > THRESHOLD || heightDiff > THRESHOLD);
+    };
+    check();
+    window.addEventListener("resize", check);
+    const interval = setInterval(check, 1000);
+    return () => {
+      window.removeEventListener("resize", check);
+      clearInterval(interval);
+    };
+  }, []);
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPassword(passwordInput);
   };
-
-  // Prevent right click and drag
-  useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
-    const handleDragStart = (e: DragEvent) => e.preventDefault();
-    
-    document.addEventListener("contextmenu", handleContextMenu);
-    document.addEventListener("dragstart", handleDragStart);
-    
-    return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
-      document.removeEventListener("dragstart", handleDragStart);
-    };
-  }, []);
 
   if (isLoading && !error) {
     return (
@@ -96,17 +130,18 @@ export default function Preview() {
             {error && password && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>Incorrect password. Please try again.</AlertDescription>
+                <AlertTitle>Wrong password</AlertTitle>
+                <AlertDescription>Please try again.</AlertDescription>
               </Alert>
             )}
             <form onSubmit={handlePasswordSubmit} className="space-y-4 mt-4">
-              <Input 
-                type="password" 
-                placeholder="Enter password" 
+              <Input
+                type="password"
+                placeholder="Enter password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="h-12"
+                autoComplete="current-password"
               />
               <Button type="submit" className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white">
                 View File
@@ -133,72 +168,144 @@ export default function Preview() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50 selection:bg-transparent">
-      {/* Viewer Header */}
-      <header className="h-16 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 bg-slate-950/80 backdrop-blur z-50">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="w-6 h-6 text-indigo-500" />
-          <span className="font-semibold text-slate-200">PreviewShield Viewer</span>
-        </div>
-        <div className="text-sm text-slate-400 font-medium">
-          Prepared for <span className="text-white">{preview.clientName}</span> by <span className="text-white">{preview.freelancerName}</span>
-        </div>
-      </header>
+    <>
+      {/* Block printing via CSS */}
+      <style>{`
+        @media print {
+          body { display: none !important; }
+        }
+        * {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+        }
+        img, video {
+          pointer-events: none !important;
+          -webkit-user-drag: none !important;
+        }
+      `}</style>
 
-      {/* Viewer Canvas */}
-      <main className="flex-1 relative flex items-center justify-center overflow-hidden p-4 md:p-8">
-        
-        {/* Content Container */}
-        <div className="relative max-w-5xl w-full max-h-full rounded-md overflow-hidden bg-slate-900 shadow-2xl border border-slate-800">
-          
-          {/* File Rendering */}
-          {preview.fileType === "image" && preview.fileUrl && (
-            <img 
-              src={preview.fileUrl} 
-              alt={preview.fileName} 
-              className="w-full h-auto object-contain max-h-[80vh] pointer-events-none"
-              draggable={false}
-            />
-          )}
-          
-          {preview.fileType === "video" && preview.fileUrl && (
-            <video 
-              src={preview.fileUrl} 
-              controls 
-              controlsList="nodownload"
-              className="w-full h-auto max-h-[80vh]"
-              onContextMenu={(e) => e.preventDefault()}
-            />
-          )}
-          
-          {preview.fileType === "pdf" && preview.fileUrl && (
-            <iframe 
-              src={`${preview.fileUrl}#toolbar=0&navpanes=0`} 
-              className="w-full h-[80vh] border-0"
-              title={preview.fileName}
-            />
-          )}
-
-          {/* Watermark Overlay */}
-          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-[0.07] overflow-hidden select-none z-10">
-            {/* Repeated watermark pattern */}
-            <div className="w-[200%] h-[200%] flex flex-wrap items-center justify-center gap-10 -rotate-12 transform scale-150">
-              {Array.from({ length: 50 }).map((_, i) => (
-                <span key={i} className="text-4xl md:text-6xl font-black uppercase tracking-widest text-white whitespace-nowrap drop-shadow-md">
-                  {preview.freelancerName} • CONFIDENTIAL
-                </span>
-              ))}
-            </div>
+      <div
+        className="min-h-screen flex flex-col bg-slate-950 text-slate-50"
+        style={{ userSelect: "none", WebkitUserSelect: "none" }}
+      >
+        {/* Devtools warning overlay */}
+        {devtoolsOpen && (
+          <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col items-center justify-center text-center p-8">
+            <EyeOff className="w-16 h-16 text-red-500 mb-6" />
+            <h2 className="text-2xl font-bold text-white mb-3">Content Hidden</h2>
+            <p className="text-slate-400 max-w-sm">
+              Developer tools have been detected. Please close them to view this secure preview.
+            </p>
           </div>
-          
-        </div>
-      </main>
-      
-      <div className="fixed bottom-4 right-4 z-50">
-        <div className="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-full px-4 py-2 text-xs font-medium text-slate-400 flex items-center gap-2 shadow-lg">
-          <Lock className="w-3 h-3" /> Secure View Mode
-        </div>
+        )}
+
+        {/* Header */}
+        <header className="h-14 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 bg-slate-950/90 backdrop-blur z-50 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-indigo-500" />
+            <span className="font-semibold text-slate-200 text-sm">PreviewShield</span>
+          </div>
+          <div className="text-xs text-slate-400 font-medium hidden sm:block">
+            For <span className="text-white">{preview.clientName}</span> · by <span className="text-white">{preview.freelancerName}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-800 rounded-full px-3 py-1">
+            <Lock className="w-3 h-3" /> Secure View
+          </div>
+        </header>
+
+        {/* Canvas */}
+        <main className="flex-1 relative flex items-center justify-center overflow-hidden p-4 md:p-8">
+          <div
+            className="relative max-w-5xl w-full rounded-lg overflow-hidden bg-slate-900 shadow-2xl border border-slate-800"
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            {/* File content */}
+            {preview.fileType === "image" && preview.fileUrl && (
+              <img
+                src={preview.fileUrl}
+                alt={preview.fileName}
+                className="w-full h-auto object-contain max-h-[80vh]"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+                style={{ pointerEvents: "none", userSelect: "none", WebkitUserDrag: "none" } as React.CSSProperties}
+              />
+            )}
+
+            {preview.fileType === "video" && preview.fileUrl && (
+              <video
+                src={preview.fileUrl}
+                controls
+                controlsList="nodownload nofullscreen noremoteplayback"
+                disablePictureInPicture
+                className="w-full h-auto max-h-[80vh]"
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ userSelect: "none" }}
+              />
+            )}
+
+            {preview.fileType === "pdf" && preview.fileUrl && (
+              <iframe
+                src={`${preview.fileUrl}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=FitH`}
+                className="w-full border-0"
+                style={{ height: "80vh", pointerEvents: "none" }}
+                title={preview.fileName}
+                sandbox="allow-same-origin allow-scripts"
+              />
+            )}
+
+            {/* Watermark tile pattern */}
+            <div
+              className="absolute inset-0 z-10 overflow-hidden"
+              style={{
+                pointerEvents: "none",
+                userSelect: "none",
+                WebkitUserSelect: "none",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: "-100px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "32px",
+                  transform: "rotate(-20deg)",
+                  opacity: 0.07,
+                  alignContent: "flex-start",
+                }}
+              >
+                {Array.from({ length: 80 }).map((_, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      fontSize: "clamp(14px, 2vw, 22px)",
+                      fontWeight: 900,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "white",
+                      whiteSpace: "nowrap",
+                      fontFamily: "system-ui, sans-serif",
+                    }}
+                  >
+                    {preview.freelancerName} · CONFIDENTIAL
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Invisible click interceptor — prevents copying image */}
+            <div
+              className="absolute inset-0 z-20"
+              style={{ pointerEvents: "all", background: "transparent" }}
+              onContextMenu={(e) => e.preventDefault()}
+              onMouseDown={(e) => { if (e.detail > 1) e.preventDefault(); }}
+            />
+          </div>
+        </main>
       </div>
-    </div>
+    </>
   );
 }
