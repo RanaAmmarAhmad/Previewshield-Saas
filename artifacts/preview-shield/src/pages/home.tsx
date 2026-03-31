@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, User, Check, Pencil, Search } from "lucide-react";
+import { Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, User, Check, Pencil, Search } from "lucide-react";
+import { LogoIcon } from "@/components/Logo";
 
 const LS_KEY = "ps_username";
 
@@ -149,7 +150,7 @@ function CSS3DFallback() {
         <div className="absolute inset-16 rounded-full border border-violet-500/30" style={{ animation: "spin 12s linear infinite reverse" }} />
         {/* Central icon */}
         <div className="relative z-10 w-28 h-28 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center shadow-2xl shadow-indigo-500/50" style={{ animation: "float 4s ease-in-out infinite" }}>
-          <ShieldCheck className="w-14 h-14 text-white" />
+          <LogoIcon size={64} />
         </div>
         {/* Dot particles */}
         {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
@@ -346,8 +347,8 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#06081a]/80 backdrop-blur-md">
         <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <ShieldCheck className="w-6 h-6 text-indigo-400" />
-            <span className="font-bold text-lg tracking-tight text-white">PreviewShield</span>
+            <LogoIcon size={28} />
+            <span className="font-bold text-xl tracking-tight text-white">PreviewShield</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/dashboard" className="text-sm font-medium text-white/60 hover:text-white transition-colors flex items-center gap-1.5">
@@ -550,7 +551,7 @@ export default function Home() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {[
                 {
-                  icon: <ShieldCheck className="w-6 h-6" />,
+                  icon: <LogoIcon size={24} />,
                   color: "from-indigo-600/20 to-indigo-800/5",
                   border: "border-indigo-500/20",
                   glow: "shadow-indigo-500/10",
@@ -763,7 +764,7 @@ export default function Home() {
           <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                <LogoIcon size={22} />
                 <span className="font-bold text-white">PreviewShield</span>
               </div>
               <p className="text-white/30 text-sm">The professional layer between your work and untrustworthy clients.</p>

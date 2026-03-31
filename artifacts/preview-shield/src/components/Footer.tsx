@@ -1,5 +1,6 @@
 import { Link } from "wouter";
-import { ShieldCheck, Twitter, Github, Linkedin } from "lucide-react";
+import { Twitter, Github, Linkedin } from "lucide-react";
+import { LogoFull } from "@/components/Logo";
 
 export function Footer() {
   return (
@@ -7,9 +8,8 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <ShieldCheck className="w-6 h-6 text-indigo-500" />
-              <span className="font-semibold text-xl tracking-tight">PreviewShield</span>
+            <Link href="/" className="mb-4 inline-block">
+              <LogoFull />
             </Link>
             <p className="text-muted-foreground text-sm max-w-sm">
               The professional layer between your work and untrusting clients. Share previews securely, track visits, and protect your livelihood.
