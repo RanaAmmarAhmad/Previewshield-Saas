@@ -9,6 +9,7 @@
 export interface Visit {
   id: string;
   previewId: string;
+  clientName?: string | null;
   ipAddress?: string | null;
   userAgent?: string | null;
   referrer?: string | null;

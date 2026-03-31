@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -6,7 +6,7 @@ export const previewsTable = pgTable("previews", {
   id: text("id").primaryKey(),
   freelancerName: text("freelancer_name").notNull(),
   agencyName: text("agency_name"),
-  clientName: text("client_name").notNull(),
+  clientName: text("client_name"),
   fileName: text("file_name").notNull(),
   fileType: text("file_type").notNull(),
   fileMimeType: text("file_mime_type").notNull(),

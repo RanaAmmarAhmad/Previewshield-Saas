@@ -27,8 +27,6 @@ import type {
   PreviewPublic,
   PreviewStats,
   RecordVisitRequest,
-  UploadUrlRequest,
-  UploadUrlResponse,
   VisitRecorded,
   VisitsList,
 } from "./api.schemas";
@@ -43,7 +41,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -119,7 +116,6 @@ export function useHealthCheck<
 }
 
 /**
- * Upload file metadata and create a shareable preview link
  * @summary Create a new preview
  */
 export const getCreatePreviewUrl = () => {
@@ -206,7 +202,6 @@ export const useCreatePreview = <
 };
 
 /**
- * Retrieve preview metadata for displaying to client
  * @summary Get a preview by ID
  */
 export const getGetPreviewUrl = (id: string, params?: GetPreviewParams) => {
@@ -312,7 +307,6 @@ export function useGetPreview<
 }
 
 /**
- * Log a client visit with IP and timestamp
  * @summary Record a client visit
  */
 export const getRecordVisitUrl = (id: string) => {
@@ -400,8 +394,7 @@ export const useRecordVisit = <
 };
 
 /**
- * Retrieve all recorded visits for a preview (owner only)
- * @summary Get visits for a preview
+ * @summary Get all visits for a preview
  */
 export const getGetPreviewVisitsUrl = (
   id: string,
@@ -483,7 +476,7 @@ export type GetPreviewVisitsQueryResult = NonNullable<
 export type GetPreviewVisitsQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary Get visits for a preview
+ * @summary Get all visits for a preview
  */
 
 export function useGetPreviewVisits<
@@ -511,95 +504,6 @@ export function useGetPreviewVisits<
 }
 
 /**
- * Returns a URL to upload a file for the preview
- * @summary Get a pre-signed upload URL
- */
-export const getGetUploadUrlUrl = (id: string) => {
-  return `/api/previews/${id}/upload-url`;
-};
-
-export const getUploadUrl = async (
-  id: string,
-  uploadUrlRequest: UploadUrlRequest,
-  options?: RequestInit,
-): Promise<UploadUrlResponse> => {
-  return customFetch<UploadUrlResponse>(getGetUploadUrlUrl(id), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(uploadUrlRequest),
-  });
-};
-
-export const getGetUploadUrlMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof getUploadUrl>>,
-    TError,
-    { id: string; data: BodyType<UploadUrlRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof getUploadUrl>>,
-  TError,
-  { id: string; data: BodyType<UploadUrlRequest> },
-  TContext
-> => {
-  const mutationKey = ["getUploadUrl"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof getUploadUrl>>,
-    { id: string; data: BodyType<UploadUrlRequest> }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return getUploadUrl(id, data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type GetUploadUrlMutationResult = NonNullable<
-  Awaited<ReturnType<typeof getUploadUrl>>
->;
-export type GetUploadUrlMutationBody = BodyType<UploadUrlRequest>;
-export type GetUploadUrlMutationError = ErrorType<ErrorResponse>;
-
-/**
- * @summary Get a pre-signed upload URL
- */
-export const useGetUploadUrl = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof getUploadUrl>>,
-    TError,
-    { id: string; data: BodyType<UploadUrlRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof getUploadUrl>>,
-  TError,
-  { id: string; data: BodyType<UploadUrlRequest> },
-  TContext
-> => {
-  return useMutation(getGetUploadUrlMutationOptions(options));
-};
-
-/**
- * Get visit count and analytics for a preview
  * @summary Get preview statistics
  */
 export const getGetPreviewStatsUrl = (

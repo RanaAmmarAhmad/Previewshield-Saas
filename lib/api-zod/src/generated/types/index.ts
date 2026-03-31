@@ -17,8 +17,6 @@ export * from "./preview";
 export * from "./previewPublic";
 export * from "./previewStats";
 export * from "./recordVisitRequest";
-export * from "./uploadUrlRequest";
-export * from "./uploadUrlResponse";
 export * from "./visit";
 export * from "./visitRecorded";
 export * from "./visitsList";

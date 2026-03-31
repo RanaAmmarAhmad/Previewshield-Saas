@@ -10,12 +10,13 @@ export interface PreviewPublic {
   id: string;
   freelancerName: string;
   agencyName?: string | null;
-  clientName: string;
   fileName: string;
   fileType: string;
   fileMimeType: string;
   fileSize: number;
-  fileUrl?: string | null;
   hasPassword: boolean;
+  /** Short-lived HMAC token for accessing the file stream */
+  streamToken: string;
   createdAt: Date;
+  expiresAt?: Date | null;
 }

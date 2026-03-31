@@ -10,12 +10,10 @@ export interface Preview {
   id: string;
   freelancerName: string;
   agencyName?: string | null;
-  clientName: string;
   fileName: string;
   fileType: string;
   fileMimeType: string;
   fileSize: number;
-  fileUrl?: string | null;
   hasPassword: boolean;
   previewUrl: string;
   ownerToken: string;

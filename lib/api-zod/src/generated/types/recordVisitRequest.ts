@@ -7,6 +7,7 @@
  */
 
 export interface RecordVisitRequest {
+  clientName?: string | null;
   userAgent?: string | null;
   referrer?: string | null;
 }

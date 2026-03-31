@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const visitsTable = pgTable("visits", {
   id: text("id").primaryKey(),
   previewId: text("preview_id").notNull(),
+  clientName: text("client_name"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   referrer: text("referrer"),

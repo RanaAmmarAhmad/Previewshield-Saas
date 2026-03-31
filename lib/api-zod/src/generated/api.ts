@@ -8,7 +8,6 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -16,23 +15,24 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * Upload file metadata and create a shareable preview link
  * @summary Create a new preview
  */
 export const CreatePreviewBody = zod.object({
   freelancerName: zod.string(),
   agencyName: zod.string().nullish(),
-  clientName: zod.string(),
   fileName: zod.string(),
   fileType: zod.enum(["image", "pdf", "video"]),
   fileMimeType: zod.string(),
   fileSize: zod.number(),
   password: zod.string().nullish(),
   fileUrl: zod.string().nullish(),
+  expiresInHours: zod
+    .number()
+    .nullish()
+    .describe("Hours until expiry. null = never. Default = 24."),
 });
 
 /**
- * Retrieve preview metadata for displaying to client
  * @summary Get a preview by ID
  */
 export const GetPreviewParams = zod.object({
@@ -47,18 +47,19 @@ export const GetPreviewResponse = zod.object({
   id: zod.string(),
   freelancerName: zod.string(),
   agencyName: zod.string().nullish(),
-  clientName: zod.string(),
   fileName: zod.string(),
   fileType: zod.string(),
   fileMimeType: zod.string(),
   fileSize: zod.number(),
-  fileUrl: zod.string().nullish(),
   hasPassword: zod.boolean(),
+  streamToken: zod
+    .string()
+    .describe("Short-lived HMAC token for accessing the file stream"),
   createdAt: zod.coerce.date(),
+  expiresAt: zod.coerce.date().nullish(),
 });
 
 /**
- * Log a client visit with IP and timestamp
  * @summary Record a client visit
  */
 export const RecordVisitParams = zod.object({
@@ -66,6 +67,7 @@ export const RecordVisitParams = zod.object({
 });
 
 export const RecordVisitBody = zod.object({
+  clientName: zod.string().nullish(),
   userAgent: zod.string().nullish(),
   referrer: zod.string().nullish(),
 });
@@ -76,8 +78,7 @@ export const RecordVisitResponse = zod.object({
 });
 
 /**
- * Retrieve all recorded visits for a preview (owner only)
- * @summary Get visits for a preview
+ * @summary Get all visits for a preview
  */
 export const GetPreviewVisitsParams = zod.object({
   id: zod.coerce.string(),
@@ -92,6 +93,7 @@ export const GetPreviewVisitsResponse = zod.object({
     zod.object({
       id: zod.string(),
       previewId: zod.string(),
+      clientName: zod.string().nullish(),
       ipAddress: zod.string().nullish(),
       userAgent: zod.string().nullish(),
       referrer: zod.string().nullish(),
@@ -102,25 +104,6 @@ export const GetPreviewVisitsResponse = zod.object({
 });
 
 /**
- * Returns a URL to upload a file for the preview
- * @summary Get a pre-signed upload URL
- */
-export const GetUploadUrlParams = zod.object({
-  id: zod.coerce.string(),
-});
-
-export const GetUploadUrlBody = zod.object({
-  fileName: zod.string(),
-  fileMimeType: zod.string(),
-});
-
-export const GetUploadUrlResponse = zod.object({
-  uploadUrl: zod.string(),
-  fileUrl: zod.string(),
-});
-
-/**
- * Get visit count and analytics for a preview
  * @summary Get preview statistics
  */
 export const GetPreviewStatsParams = zod.object({
@@ -140,6 +123,7 @@ export const GetPreviewStatsResponse = zod.object({
     zod.object({
       id: zod.string(),
       previewId: zod.string(),
+      clientName: zod.string().nullish(),
       ipAddress: zod.string().nullish(),
       userAgent: zod.string().nullish(),
       referrer: zod.string().nullish(),

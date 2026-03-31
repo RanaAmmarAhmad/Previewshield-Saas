@@ -10,11 +10,12 @@ import type { CreatePreviewRequestFileType } from "./createPreviewRequestFileTyp
 export interface CreatePreviewRequest {
   freelancerName: string;
   agencyName?: string | null;
-  clientName: string;
   fileName: string;
   fileType: CreatePreviewRequestFileType;
   fileMimeType: string;
   fileSize: number;
   password?: string | null;
   fileUrl?: string | null;
+  /** Hours until expiry. null = never. Default = 24. */
+  expiresInHours?: number | null;
 }

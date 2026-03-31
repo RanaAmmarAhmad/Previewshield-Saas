@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, count, countDistinct } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, previewsTable, visitsTable } from "@workspace/db";
 import {
   CreatePreviewBody,
@@ -9,14 +9,18 @@ import {
   RecordVisitBody,
   GetPreviewVisitsParams,
   GetPreviewVisitsQueryParams,
-  GetUploadUrlParams,
-  GetUploadUrlBody,
   GetPreviewStatsParams,
   GetPreviewStatsQueryParams,
 } from "@workspace/api-zod";
-import { createHash, randomBytes } from "crypto";
+import { createHash, createHmac, randomBytes } from "crypto";
+import fs from "fs";
+import path from "path";
 
 const router: IRouter = Router();
+
+const SESSION_SECRET = process.env.SESSION_SECRET || "previewshield-secret-key-change-in-prod";
+
+const UPLOADS_DIR = path.resolve(process.cwd(), "uploads");
 
 function generateId(): string {
   return randomBytes(8).toString("hex");
@@ -24,6 +28,44 @@ function generateId(): string {
 
 function hashPassword(password: string): string {
   return createHash("sha256").update(password).digest("hex");
+}
+
+function generateStreamToken(previewId: string): string {
+  const bucket = Math.floor(Date.now() / (10 * 60 * 1000));
+  return createHmac("sha256", SESSION_SECRET)
+    .update(`stream:${previewId}:${bucket}`)
+    .digest("hex");
+}
+
+function validateStreamToken(previewId: string, token: string): boolean {
+  const now = Math.floor(Date.now() / (10 * 60 * 1000));
+  for (const bucket of [now, now - 1, now - 2]) {
+    const expected = createHmac("sha256", SESSION_SECRET)
+      .update(`stream:${previewId}:${bucket}`)
+      .digest("hex");
+    if (token === expected) return true;
+  }
+  return false;
+}
+
+function deleteUploadedFile(fileUrl: string | null | undefined): void {
+  if (!fileUrl) return;
+  try {
+    const filename = fileUrl.split("/").pop();
+    if (filename) {
+      const filePath = path.join(UPLOADS_DIR, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+  } catch {
+    // ignore cleanup errors
+  }
+}
+
+function isExpired(preview: { expiresAt: Date | null }): boolean {
+  if (!preview.expiresAt) return false;
+  return new Date() > new Date(preview.expiresAt);
 }
 
 router.post("/previews", async (req, res): Promise<void> => {
@@ -38,13 +80,23 @@ router.post("/previews", async (req, res): Promise<void> => {
   const ownerToken = randomBytes(16).toString("hex");
   const passwordHash = data.password ? hashPassword(data.password) : null;
 
+  // expiresInHours: null = never, not provided = default 24h
+  let expiresAt: Date | null = null;
+  const expiresInHours = (data as any).expiresInHours;
+  if (expiresInHours === null) {
+    expiresAt = null; // never
+  } else {
+    const hours = typeof expiresInHours === "number" ? expiresInHours : 24;
+    expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
+  }
+
   const [preview] = await db
     .insert(previewsTable)
     .values({
       id,
       freelancerName: data.freelancerName,
       agencyName: data.agencyName ?? null,
-      clientName: data.clientName,
+      clientName: null,
       fileName: data.fileName,
       fileType: data.fileType,
       fileMimeType: data.fileMimeType,
@@ -52,6 +104,7 @@ router.post("/previews", async (req, res): Promise<void> => {
       fileUrl: data.fileUrl ?? null,
       passwordHash,
       ownerToken,
+      expiresAt,
     })
     .returning();
 
@@ -66,12 +119,10 @@ router.post("/previews", async (req, res): Promise<void> => {
     id: preview.id,
     freelancerName: preview.freelancerName,
     agencyName: preview.agencyName ?? null,
-    clientName: preview.clientName,
     fileName: preview.fileName,
     fileType: preview.fileType,
     fileMimeType: preview.fileMimeType,
     fileSize: preview.fileSize,
-    fileUrl: preview.fileUrl ?? null,
     hasPassword: !!preview.passwordHash,
     previewUrl,
     ownerToken: preview.ownerToken,
@@ -99,6 +150,13 @@ router.get("/previews/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  if (isExpired(preview)) {
+    deleteUploadedFile(preview.fileUrl);
+    await db.delete(previewsTable).where(eq(previewsTable.id, preview.id));
+    res.status(410).json({ error: "expired", message: "This preview has expired and been deleted" });
+    return;
+  }
+
   if (preview.passwordHash) {
     const providedPassword = query.success ? query.data.password : undefined;
     if (!providedPassword) {
@@ -111,19 +169,75 @@ router.get("/previews/:id", async (req, res): Promise<void> => {
     }
   }
 
+  const streamToken = generateStreamToken(preview.id);
+
   res.json({
     id: preview.id,
     freelancerName: preview.freelancerName,
     agencyName: preview.agencyName ?? null,
-    clientName: preview.clientName,
     fileName: preview.fileName,
     fileType: preview.fileType,
     fileMimeType: preview.fileMimeType,
     fileSize: preview.fileSize,
-    fileUrl: preview.fileUrl ?? null,
     hasPassword: !!preview.passwordHash,
+    streamToken,
     createdAt: preview.createdAt,
+    expiresAt: preview.expiresAt ?? null,
   });
+});
+
+router.get("/previews/:id/stream", async (req, res): Promise<void> => {
+  const { id } = req.params;
+  const token = req.query.t as string | undefined;
+
+  if (!token || !validateStreamToken(id, token)) {
+    res.status(403).json({ error: "forbidden", message: "Invalid or expired stream token" });
+    return;
+  }
+
+  const [preview] = await db
+    .select()
+    .from(previewsTable)
+    .where(eq(previewsTable.id, id));
+
+  if (!preview) {
+    res.status(404).json({ error: "not_found", message: "Preview not found" });
+    return;
+  }
+
+  if (isExpired(preview)) {
+    deleteUploadedFile(preview.fileUrl);
+    await db.delete(previewsTable).where(eq(previewsTable.id, preview.id));
+    res.status(410).json({ error: "expired", message: "Preview expired" });
+    return;
+  }
+
+  if (!preview.fileUrl) {
+    res.status(404).json({ error: "not_found", message: "No file attached to this preview" });
+    return;
+  }
+
+  const filename = preview.fileUrl.split("/").pop();
+  if (!filename) {
+    res.status(404).json({ error: "not_found", message: "File not found" });
+    return;
+  }
+
+  const filePath = path.join(UPLOADS_DIR, filename);
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: "not_found", message: "File not found on disk" });
+    return;
+  }
+
+  const stat = fs.statSync(filePath);
+  res.setHeader("Content-Type", preview.fileMimeType || "application/octet-stream");
+  res.setHeader("Content-Length", stat.size);
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Content-Disposition", "inline");
+
+  const stream = fs.createReadStream(filePath);
+  stream.pipe(res);
 });
 
 router.post("/previews/:id/visit", async (req, res): Promise<void> => {
@@ -154,6 +268,7 @@ router.post("/previews/:id/visit", async (req, res): Promise<void> => {
   await db.insert(visitsTable).values({
     id: visitId,
     previewId: params.data.id,
+    clientName: body.success ? ((body.data as any).clientName ?? null) : null,
     ipAddress,
     userAgent: body.success ? (body.data.userAgent ?? null) : null,
     referrer: body.success ? (body.data.referrer ?? null) : null,
@@ -200,6 +315,7 @@ router.get("/previews/:id/visits", async (req, res): Promise<void> => {
     visits: visits.map((v) => ({
       id: v.id,
       previewId: v.previewId,
+      clientName: v.clientName ?? null,
       ipAddress: v.ipAddress ?? null,
       userAgent: v.userAgent ?? null,
       referrer: v.referrer ?? null,
@@ -207,35 +323,6 @@ router.get("/previews/:id/visits", async (req, res): Promise<void> => {
     })),
     total: visits.length,
   });
-});
-
-router.post("/previews/:id/upload-url", async (req, res): Promise<void> => {
-  const params = GetUploadUrlParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: "validation_error", message: params.error.message });
-    return;
-  }
-
-  const body = GetUploadUrlBody.safeParse(req.body);
-  if (!body.success) {
-    res.status(400).json({ error: "validation_error", message: body.error.message });
-    return;
-  }
-
-  const [preview] = await db
-    .select()
-    .from(previewsTable)
-    .where(eq(previewsTable.id, params.data.id));
-
-  if (!preview) {
-    res.status(404).json({ error: "not_found", message: "Preview not found" });
-    return;
-  }
-
-  const uploadUrl = `/api/previews/${params.data.id}/file`;
-  const fileUrl = `/api/previews/${params.data.id}/file`;
-
-  res.json({ uploadUrl, fileUrl });
 });
 
 router.get("/previews/:id/stats", async (req, res): Promise<void> => {
@@ -274,16 +361,16 @@ router.get("/previews/:id/stats", async (req, res): Promise<void> => {
 
   const uniqueIps = new Set(visits.filter((v) => v.ipAddress).map((v) => v.ipAddress)).size;
   const lastVisitAt = visits.length > 0 ? visits[visits.length - 1]!.visitedAt : null;
-  const recentVisits = visits.slice(-5).reverse();
 
   res.json({
     previewId: params.data.id,
     totalVisits: visits.length,
     uniqueIps,
     lastVisitAt: lastVisitAt ?? null,
-    recentVisits: recentVisits.map((v) => ({
+    recentVisits: visits.map((v) => ({
       id: v.id,
       previewId: v.previewId,
+      clientName: v.clientName ?? null,
       ipAddress: v.ipAddress ?? null,
       userAgent: v.userAgent ?? null,
       referrer: v.referrer ?? null,

@@ -8,18 +8,14 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: previews
-    description: Preview management operations
   - name: visits
-    description: Visit tracking operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -33,7 +29,6 @@ paths:
       operationId: createPreview
       tags: [previews]
       summary: Create a new preview
-      description: Upload file metadata and create a shareable preview link
       requestBody:
         required: true
         content:
@@ -59,7 +54,6 @@ paths:
       operationId: getPreview
       tags: [previews]
       summary: Get a preview by ID
-      description: Retrieve preview metadata for displaying to client
       parameters:
         - name: id
           in: path
@@ -90,13 +84,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "410":
+          description: Preview expired and deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /previews/{id}/visit:
     post:
       operationId: recordVisit
       tags: [visits]
       summary: Record a client visit
-      description: Log a client visit with IP and timestamp
       parameters:
         - name: id
           in: path
@@ -127,8 +126,7 @@ paths:
     get:
       operationId: getPreviewVisits
       tags: [visits]
-      summary: Get visits for a preview
-      description: Retrieve all recorded visits for a preview (owner only)
+      summary: Get all visits for a preview
       parameters:
         - name: id
           in: path
@@ -154,39 +152,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
-          description: Preview not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /previews/{id}/upload-url:
-    post:
-      operationId: getUploadUrl
-      tags: [previews]
-      summary: Get a pre-signed upload URL
-      description: Returns a URL to upload a file for the preview
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UploadUrlRequest"
-      responses:
-        "200":
-          description: Upload URL generated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UploadUrlResponse"
-        "404":
-          description: Preview not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -197,7 +163,6 @@ paths:
       operationId: getPreviewStats
       tags: [previews]
       summary: Get preview statistics
-      description: Get visit count and analytics for a preview
       parameters:
         - name: id
           in: path
@@ -211,7 +176,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Preview stats
+          description: Stats
           content:
             application/json:
               schema:
@@ -223,7 +188,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
-          description: Preview not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -236,8 +201,7 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
     CreatePreviewRequest:
       type: object
@@ -247,8 +211,6 @@ components:
         agencyName:
           type: string
           nullable: true
-        clientName:
-          type: string
         fileName:
           type: string
         fileType:
@@ -264,9 +226,12 @@ components:
         fileUrl:
           type: string
           nullable: true
+        expiresInHours:
+          type: integer
+          nullable: true
+          description: "Hours until expiry. null = never. Default = 24."
       required:
         - freelancerName
-        - clientName
         - fileName
         - fileType
         - fileMimeType
@@ -282,8 +247,6 @@ components:
         agencyName:
           type: string
           nullable: true
-        clientName:
-          type: string
         fileName:
           type: string
         fileType:
@@ -292,9 +255,6 @@ components:
           type: string
         fileSize:
           type: integer
-        fileUrl:
-          type: string
-          nullable: true
         hasPassword:
           type: boolean
         previewUrl:
@@ -311,7 +271,6 @@ components:
       required:
         - id
         - freelancerName
-        - clientName
         - fileName
         - fileType
         - fileMimeType
@@ -331,8 +290,6 @@ components:
         agencyName:
           type: string
           nullable: true
-        clientName:
-          type: string
         fileName:
           type: string
         fileType:
@@ -341,35 +298,41 @@ components:
           type: string
         fileSize:
           type: integer
-        fileUrl:
-          type: string
-          nullable: true
         hasPassword:
           type: boolean
+        streamToken:
+          type: string
+          description: Short-lived HMAC token for accessing the file stream
         createdAt:
           type: string
           format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
       required:
         - id
         - freelancerName
-        - clientName
         - fileName
         - fileType
         - fileMimeType
         - fileSize
         - hasPassword
+        - streamToken
         - createdAt
 
     RecordVisitRequest:
       type: object
       properties:
+        clientName:
+          type: string
+          nullable: true
         userAgent:
           type: string
           nullable: true
         referrer:
           type: string
           nullable: true
-      required: []
 
     VisitRecorded:
       type: object
@@ -378,9 +341,7 @@ components:
           type: boolean
         visitId:
           type: string
-      required:
-        - success
-        - visitId
+      required: [success, visitId]
 
     VisitsList:
       type: object
@@ -391,9 +352,7 @@ components:
             $ref: "#/components/schemas/Visit"
         total:
           type: integer
-      required:
-        - visits
-        - total
+      required: [visits, total]
 
     Visit:
       type: object
@@ -402,6 +361,9 @@ components:
           type: string
         previewId:
           type: string
+        clientName:
+          type: string
+          nullable: true
         ipAddress:
           type: string
           nullable: true
@@ -414,32 +376,7 @@ components:
         visitedAt:
           type: string
           format: date-time
-      required:
-        - id
-        - previewId
-        - visitedAt
-
-    UploadUrlRequest:
-      type: object
-      properties:
-        fileName:
-          type: string
-        fileMimeType:
-          type: string
-      required:
-        - fileName
-        - fileMimeType
-
-    UploadUrlResponse:
-      type: object
-      properties:
-        uploadUrl:
-          type: string
-        fileUrl:
-          type: string
-      required:
-        - uploadUrl
-        - fileUrl
+      required: [id, previewId, visitedAt]
 
     PreviewStats:
       type: object
@@ -458,11 +395,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Visit"
-      required:
-        - previewId
-        - totalVisits
-        - uniqueIps
-        - recentVisits
+      required: [previewId, totalVisits, uniqueIps, recentVisits]
 
     ErrorResponse:
       type: object
@@ -471,6 +404,4 @@ components:
           type: string
         message:
           type: string
-      required:
-        - error
-        - message
+      required: [error, message]

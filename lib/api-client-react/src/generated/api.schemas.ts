@@ -21,25 +21,24 @@ export const CreatePreviewRequestFileType = {
 export interface CreatePreviewRequest {
   freelancerName: string;
   agencyName?: string | null;
-  clientName: string;
   fileName: string;
   fileType: CreatePreviewRequestFileType;
   fileMimeType: string;
   fileSize: number;
   password?: string | null;
   fileUrl?: string | null;
+  /** Hours until expiry. null = never. Default = 24. */
+  expiresInHours?: number | null;
 }
 
 export interface Preview {
   id: string;
   freelancerName: string;
   agencyName?: string | null;
-  clientName: string;
   fileName: string;
   fileType: string;
   fileMimeType: string;
   fileSize: number;
-  fileUrl?: string | null;
   hasPassword: boolean;
   previewUrl: string;
   ownerToken: string;
@@ -51,17 +50,19 @@ export interface PreviewPublic {
   id: string;
   freelancerName: string;
   agencyName?: string | null;
-  clientName: string;
   fileName: string;
   fileType: string;
   fileMimeType: string;
   fileSize: number;
-  fileUrl?: string | null;
   hasPassword: boolean;
+  /** Short-lived HMAC token for accessing the file stream */
+  streamToken: string;
   createdAt: string;
+  expiresAt?: string | null;
 }
 
 export interface RecordVisitRequest {
+  clientName?: string | null;
   userAgent?: string | null;
   referrer?: string | null;
 }
@@ -74,6 +75,7 @@ export interface VisitRecorded {
 export interface Visit {
   id: string;
   previewId: string;
+  clientName?: string | null;
   ipAddress?: string | null;
   userAgent?: string | null;
   referrer?: string | null;
@@ -83,16 +85,6 @@ export interface Visit {
 export interface VisitsList {
   visits: Visit[];
   total: number;
-}
-
-export interface UploadUrlRequest {
-  fileName: string;
-  fileMimeType: string;
-}
-
-export interface UploadUrlResponse {
-  uploadUrl: string;
-  fileUrl: string;
 }
 
 export interface PreviewStats {

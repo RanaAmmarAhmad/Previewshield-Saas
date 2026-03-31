@@ -1,20 +1,23 @@
 import { useParams } from "wouter";
 import { useGetPreview, useRecordVisit } from "@workspace/api-client-react";
-import { ShieldCheck, Lock, Loader2, AlertCircle, EyeOff } from "lucide-react";
+import { ShieldCheck, Lock, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState, useEffect, useRef } from "react";
 
+type Step = "consent" | "name" | "password" | "view";
+
 export default function Preview() {
   const params = useParams();
   const id = params.id as string;
 
+  const [step, setStep] = useState<Step>("consent");
+  const [clientName, setClientName] = useState("");
+  const [clientNameInput, setClientNameInput] = useState("");
   const [password, setPassword] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
-  const [needsPassword, setNeedsPassword] = useState(false);
-  const [devtoolsOpen, setDevtoolsOpen] = useState(false);
 
   const recordVisit = useRecordVisit();
   const recordedRef = useRef(false);
@@ -24,98 +27,153 @@ export default function Preview() {
     { password: password || undefined },
     {
       query: {
-        enabled: !!id,
+        enabled: !!id && step === "view",
         retry: false,
         queryKey: ["getPreview", id, password],
       },
     }
   );
 
+  const needsPassword =
+    (error && (error as any)?.status === 401 && (error as any)?.body?.error === "password_required") ||
+    (error && (error as any)?.status === 401 && !password);
+
+  const wrongPassword =
+    error && (error as any)?.status === 401 && password && (error as any)?.body?.error === "wrong_password";
+
+  const isExpired = (error as any)?.status === 410;
+
   useEffect(() => {
-    if (error && (error as any)?.status === 401) {
-      setNeedsPassword(true);
-    } else if (preview && preview.hasPassword && !password) {
-      setNeedsPassword(true);
-    } else if (preview) {
-      setNeedsPassword(false);
-      if (!recordedRef.current) {
-        recordedRef.current = true;
-        recordVisit.mutate({
-          id,
-          data: { userAgent: navigator.userAgent, referrer: document.referrer },
-        });
-      }
+    if (step !== "view") return;
+    if (needsPassword && !password) { setStep("password"); return; }
+    if (wrongPassword) { setStep("password"); return; }
+    if (preview && !recordedRef.current) {
+      recordedRef.current = true;
+      recordVisit.mutate({
+        id,
+        data: { clientName, userAgent: navigator.userAgent, referrer: document.referrer } as any,
+      });
     }
-  }, [preview, error, id, password, recordVisit]);
+  }, [preview, needsPassword, wrongPassword, step, id, clientName, password, recordVisit]);
 
-  // ─── Security Layer ────────────────────────────────────────────────────────
+  // Security: block right-click, drag, selection, and print — but NOT DevTools
   useEffect(() => {
-    // 1. Block right-click
     const noContextMenu = (e: MouseEvent) => e.preventDefault();
-    // 2. Block drag
     const noDragStart = (e: DragEvent) => e.preventDefault();
-    // 3. Block print
-    const noPrint = (e: KeyboardEvent) => {
-      const key = e.key?.toLowerCase();
-      const ctrl = e.ctrlKey || e.metaKey;
-      // F12 / DevTools shortcuts / Print / Save / Select All / Copy / Inspect
-      if (
-        e.key === "F12" ||
-        (ctrl && e.shiftKey && (key === "i" || key === "j" || key === "c")) ||
-        (ctrl && (key === "u" || key === "s" || key === "p" || key === "a")) ||
-        e.key === "PrintScreen"
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-    // 4. Block selection globally on this page
     const noSelect = (e: Event) => e.preventDefault();
-
     document.addEventListener("contextmenu", noContextMenu);
     document.addEventListener("dragstart", noDragStart);
-    document.addEventListener("keydown", noPrint, true);
     document.addEventListener("selectstart", noSelect);
-
     return () => {
       document.removeEventListener("contextmenu", noContextMenu);
       document.removeEventListener("dragstart", noDragStart);
-      document.removeEventListener("keydown", noPrint, true);
       document.removeEventListener("selectstart", noSelect);
     };
   }, []);
 
-  // 5. DevTools detection via window size heuristic
-  useEffect(() => {
-    const THRESHOLD = 160;
-    const check = () => {
-      const widthDiff = window.outerWidth - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
-      setDevtoolsOpen(widthDiff > THRESHOLD || heightDiff > THRESHOLD);
-    };
-    check();
-    window.addEventListener("resize", check);
-    const interval = setInterval(check, 1000);
-    return () => {
-      window.removeEventListener("resize", check);
-      clearInterval(interval);
-    };
-  }, []);
+  const handleConsentAccept = () => setStep("name");
+
+  const handleNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientNameInput.trim()) return;
+    setClientName(clientNameInput.trim());
+    setStep("view");
+  };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPassword(passwordInput);
+    setStep("view");
   };
 
-  if (isLoading && !error) {
+  if (step === "consent") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+        <Card className="w-full max-w-md shadow-2xl border-slate-200 dark:border-slate-800">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-full flex items-center justify-center mb-4">
+              <ShieldCheck className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <CardTitle>Before You View</CardTitle>
+            <CardDescription>This secure preview is protected by PreviewShield.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1.5">Data Collection Notice</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                    By accessing this preview, you acknowledge that the following information will be recorded and shared with the file owner:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-xs text-amber-700 dark:text-amber-400">
+                    <li className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>Your name (entered on next step)
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>Your IP address
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>Date and time of your visit
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>Browser and device info
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              This information is used solely for delivery verification purposes.
+            </p>
+            <Button
+              onClick={handleConsentAccept}
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              I understand — Continue
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  if (needsPassword) {
+  if (step === "name") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+        <Card className="w-full max-w-md shadow-2xl border-slate-200 dark:border-slate-800">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto w-12 h-12 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
+              <ShieldCheck className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <CardTitle>Who are you?</CardTitle>
+            <CardDescription>Enter your name so the sender knows who accessed this file.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleNameSubmit} className="space-y-4 mt-4">
+              <Input
+                type="text"
+                placeholder="Your name or company"
+                value={clientNameInput}
+                onChange={(e) => setClientNameInput(e.target.value)}
+                className="h-12"
+                autoFocus
+              />
+              <Button
+                type="submit"
+                disabled={!clientNameInput.trim()}
+                className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Continue to Preview
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (step === "password") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
         <Card className="w-full max-w-md shadow-2xl border-slate-200 dark:border-slate-800">
@@ -127,7 +185,7 @@ export default function Preview() {
             <CardDescription>This preview is password protected.</CardDescription>
           </CardHeader>
           <CardContent>
-            {error && password && (
+            {wrongPassword && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Wrong password</AlertTitle>
@@ -142,6 +200,7 @@ export default function Preview() {
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="h-12"
                 autoComplete="current-password"
+                autoFocus
               />
               <Button type="submit" className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white">
                 View File
@@ -153,7 +212,30 @@ export default function Preview() {
     );
   }
 
-  if (isError || !preview) {
+  // step === "view"
+  if (isExpired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Link Expired</h2>
+            <p className="text-muted-foreground">This preview link has expired. The file has been deleted from the server.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading && !error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
+
+  if (isError && !needsPassword && !wrongPassword && !isExpired) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
         <Card className="w-full max-w-md">
@@ -167,39 +249,26 @@ export default function Preview() {
     );
   }
 
+  if (!preview) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
+
+  const streamToken = (preview as any).streamToken as string;
+  const streamUrl = `/api/previews/${id}/stream?t=${encodeURIComponent(streamToken)}`;
+
   return (
     <>
-      {/* Block printing via CSS */}
       <style>{`
-        @media print {
-          body { display: none !important; }
-        }
-        * {
-          -webkit-user-select: none !important;
-          -moz-user-select: none !important;
-          -ms-user-select: none !important;
-          user-select: none !important;
-        }
-        img, video {
-          pointer-events: none !important;
-          -webkit-user-drag: none !important;
-        }
+        @media print { body { display: none !important; } }
+        * { -webkit-user-select: none !important; -moz-user-select: none !important; user-select: none !important; }
+        img, video { pointer-events: none !important; -webkit-user-drag: none !important; }
       `}</style>
 
-      <div
-        className="min-h-screen flex flex-col bg-slate-950 text-slate-50"
-        style={{ userSelect: "none", WebkitUserSelect: "none" }}
-      >
-        {/* Devtools warning overlay */}
-        {devtoolsOpen && (
-          <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col items-center justify-center text-center p-8">
-            <EyeOff className="w-16 h-16 text-red-500 mb-6" />
-            <h2 className="text-2xl font-bold text-white mb-3">Content Hidden</h2>
-            <p className="text-slate-400 max-w-sm">
-              Developer tools have been detected. Please close them to view this secure preview.
-            </p>
-          </div>
-        )}
+      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50" style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}>
 
         {/* Header */}
         <header className="h-14 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 bg-slate-950/90 backdrop-blur z-50 shrink-0">
@@ -208,7 +277,9 @@ export default function Preview() {
             <span className="font-semibold text-slate-200 text-sm">PreviewShield</span>
           </div>
           <div className="text-xs text-slate-400 font-medium hidden sm:block">
-            For <span className="text-white">{preview.clientName}</span> · by <span className="text-white">{preview.freelancerName}</span>
+            {clientName && <span className="text-white">{clientName}</span>}
+            {clientName && " · "}
+            by <span className="text-white">{preview.freelancerName}</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-800 rounded-full px-3 py-1">
             <Lock className="w-3 h-3" /> Secure View
@@ -221,22 +292,22 @@ export default function Preview() {
             className="relative max-w-5xl w-full rounded-lg overflow-hidden bg-slate-900 shadow-2xl border border-slate-800"
             onContextMenu={(e) => e.preventDefault()}
           >
-            {/* File content */}
-            {preview.fileType === "image" && preview.fileUrl && (
+            {/* File content — served via encrypted stream token, never exposes raw file path */}
+            {preview.fileType === "image" && (
               <img
-                src={preview.fileUrl}
+                src={streamUrl}
                 alt={preview.fileName}
                 className="w-full h-auto object-contain max-h-[80vh]"
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
                 onDragStart={(e) => e.preventDefault()}
-                style={{ pointerEvents: "none", userSelect: "none", WebkitUserDrag: "none" } as React.CSSProperties}
+                style={{ pointerEvents: "none", userSelect: "none" } as React.CSSProperties}
               />
             )}
 
-            {preview.fileType === "video" && preview.fileUrl && (
+            {preview.fileType === "video" && (
               <video
-                src={preview.fileUrl}
+                src={streamUrl}
                 controls
                 controlsList="nodownload nofullscreen noremoteplayback"
                 disablePictureInPicture
@@ -246,9 +317,9 @@ export default function Preview() {
               />
             )}
 
-            {preview.fileType === "pdf" && preview.fileUrl && (
+            {preview.fileType === "pdf" && (
               <iframe
-                src={`${preview.fileUrl}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=FitH`}
+                src={`${streamUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                 className="w-full border-0"
                 style={{ height: "80vh", pointerEvents: "none" }}
                 title={preview.fileName}
@@ -256,53 +327,19 @@ export default function Preview() {
               />
             )}
 
-            {/* Watermark tile pattern */}
-            <div
-              className="absolute inset-0 z-10 overflow-hidden"
-              style={{
-                pointerEvents: "none",
-                userSelect: "none",
-                WebkitUserSelect: "none",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: "-100px",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "32px",
-                  transform: "rotate(-20deg)",
-                  opacity: 0.07,
-                  alignContent: "flex-start",
-                }}
-              >
+            {/* Watermark */}
+            <div className="absolute inset-0 z-10 overflow-hidden" style={{ pointerEvents: "none", userSelect: "none" }}>
+              <div style={{ position: "absolute", inset: "-100px", display: "flex", flexWrap: "wrap", gap: "32px", transform: "rotate(-20deg)", opacity: 0.07, alignContent: "flex-start" }}>
                 {Array.from({ length: 80 }).map((_, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      fontSize: "clamp(14px, 2vw, 22px)",
-                      fontWeight: 900,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "white",
-                      whiteSpace: "nowrap",
-                      fontFamily: "system-ui, sans-serif",
-                    }}
-                  >
+                  <span key={i} style={{ fontSize: "clamp(14px, 2vw, 22px)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: "white", whiteSpace: "nowrap", fontFamily: "system-ui, sans-serif" }}>
                     {preview.freelancerName} · CONFIDENTIAL
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Invisible click interceptor — prevents copying image */}
-            <div
-              className="absolute inset-0 z-20"
-              style={{ pointerEvents: "all", background: "transparent" }}
-              onContextMenu={(e) => e.preventDefault()}
-              onMouseDown={(e) => { if (e.detail > 1) e.preventDefault(); }}
-            />
+            {/* Click interceptor */}
+            <div className="absolute inset-0 z-20" style={{ pointerEvents: "all", background: "transparent" }} onContextMenu={(e) => e.preventDefault()} onMouseDown={(e) => { if (e.detail > 1) e.preventDefault(); }} />
           </div>
         </main>
       </div>
