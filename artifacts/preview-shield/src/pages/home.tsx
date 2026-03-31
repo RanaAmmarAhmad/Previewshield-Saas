@@ -237,14 +237,14 @@ function FloatingCard({ icon, label, value, delay, className }: {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay, ease: "easeOut" }}
-      className={`absolute backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl ${className}`}
+      className={`absolute backdrop-blur-md bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-2xl ${className}`}
     >
-      <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0 text-indigo-300">
+      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0 text-indigo-300 [&>svg]:w-3.5 [&>svg]:h-3.5 sm:[&>svg]:w-4 sm:[&>svg]:h-4">
         {icon}
       </div>
       <div>
-        <p className="text-xs text-white/50 font-medium leading-none mb-1">{label}</p>
-        <p className="text-sm font-bold text-white leading-none">{value}</p>
+        <p className="text-[10px] sm:text-xs text-white/50 font-medium leading-none mb-0.5 sm:mb-1">{label}</p>
+        <p className="text-xs sm:text-sm font-bold text-white leading-none">{value}</p>
       </div>
     </motion.div>
   );
@@ -275,7 +275,7 @@ export default function Home() {
       <main className="flex-1">
 
         {/* ─── Hero ──────────────────────────────────────────────── */}
-        <section className="relative min-h-[85vh] sm:min-h-[92vh] flex items-center overflow-hidden pt-6 sm:pt-0">
+        <section className="relative min-h-screen sm:min-h-[92vh] flex items-start sm:items-center overflow-hidden pt-14 sm:pt-8">
           {/* Background glow */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-indigo-700/20 rounded-full blur-[120px]" />
@@ -365,8 +365,8 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              {/* Right — 3D Canvas (hidden on mobile) */}
-              <div className="relative h-[420px] lg:h-[580px] hidden md:block">
+              {/* Right — 3D Canvas (responsive on all screens) */}
+              <div className="relative h-[260px] sm:h-[380px] md:h-[420px] lg:h-[580px] block">
                 {webgl ? (
                   <WebGLErrorBoundary fallback={<CSS3DFallback />}>
                     <Canvas camera={{ position: [0, 0, 5.5], fov: 50 }} style={{ borderRadius: "1.5rem" }}>
@@ -385,28 +385,28 @@ export default function Home() {
                   label="Views Tracked"
                   value="Real-time"
                   delay={1.0}
-                  className="top-8 right-4 md:right-0 min-w-[160px]"
+                  className="top-4 sm:top-8 right-2 sm:right-0 min-w-[130px] sm:min-w-[160px]"
                 />
                 <FloatingCard
                   icon={<Lock className="w-4 h-4" />}
-                  label="Copy Protection"
+                  label="Copy Protected"
                   value="Always On"
                   delay={1.2}
-                  className="bottom-24 right-4 md:-right-4 min-w-[160px]"
+                  className="bottom-16 sm:bottom-24 right-2 sm:right-0 min-w-[130px] sm:min-w-[160px]"
                 />
                 <FloatingCard
                   icon={<BarChart2 className="w-4 h-4" />}
-                  label="Viewer Analytics"
-                  value="Name · IP · Time"
+                  label="Analytics"
+                  value="Name · IP · City"
                   delay={1.4}
-                  className="bottom-4 left-2 min-w-[180px]"
+                  className="bottom-2 sm:bottom-4 left-1 sm:left-2 min-w-[140px] sm:min-w-[180px]"
                 />
                 <FloatingCard
                   icon={<Clock className="w-4 h-4" />}
                   label="Auto Expiry"
                   value="24h Default"
                   delay={1.6}
-                  className="top-12 left-2 min-w-[160px]"
+                  className="top-4 sm:top-12 left-1 sm:left-2 min-w-[130px] sm:min-w-[160px]"
                 />
               </div>
 
@@ -629,6 +629,104 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Pricing ──────────────────────────────────────────── */}
+        <section className="py-14 sm:py-20 md:py-28 relative overflow-hidden" style={{ background: "#06081a" }}>
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-700/10 rounded-full blur-[100px]" />
+          </div>
+          <div className="container mx-auto px-4 md:px-6 relative">
+            <div className="text-center mb-12">
+              <p className="text-indigo-400 font-semibold text-xs tracking-widest uppercase mb-3">Simple pricing</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
+                Start free.{" "}
+                <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                  No credit card.
+                </span>
+              </h2>
+              <p className="text-white/50 text-base max-w-xl mx-auto">
+                Every feature you need to protect your work and track clients — always free.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+              {/* Free Plan */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="relative rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-600/20 to-violet-600/10 p-6 sm:p-8 overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 bg-gradient-to-bl from-indigo-500/20 to-transparent w-32 h-32 rounded-bl-full" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  Current Plan
+                </div>
+                <p className="text-4xl font-black text-white mb-1">$0<span className="text-lg font-medium text-white/40">/mo</span></p>
+                <p className="text-white/50 text-sm mb-6">Free forever · No card required</p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Unlimited secure previews",
+                    "Password protection",
+                    "Link expiry (24h/48h/7d)",
+                    "IP + location tracking",
+                    "Client name gate",
+                    "Real-time visitor analytics",
+                    "File upload or URL embed",
+                    "Watermarked image previews",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-white/70">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/share">
+                  <button className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">
+                    Get Started Free
+                  </button>
+                </Link>
+              </motion.div>
+
+              {/* Pro Plan — Coming Soon */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="relative rounded-2xl border border-white/10 bg-white/3 p-6 sm:p-8 overflow-hidden"
+              >
+                <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ background: "radial-gradient(ellipse at top right, rgba(139,92,246,0.08) 0%, transparent 60%)" }} />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/40 text-xs font-semibold mb-5">
+                  Coming Soon
+                </div>
+                <p className="text-4xl font-black text-white/30 mb-1">$9<span className="text-lg font-medium text-white/20">/mo</span></p>
+                <p className="text-white/30 text-sm mb-6">Pro plan · Early access</p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Everything in Free",
+                    "Custom branded preview page",
+                    "Geo-block by country",
+                    "Download after payment",
+                    "Team collaboration",
+                    "Priority support",
+                    "Advanced export reports",
+                    "Custom domain for share links",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-white/30">
+                      <CheckCircle2 className="w-4 h-4 text-white/20 shrink-0 mt-0.5" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button disabled className="w-full h-10 rounded-xl bg-white/5 border border-white/10 text-white/30 text-sm font-semibold cursor-not-allowed">
+                  Notify Me
+                </button>
               </motion.div>
             </div>
           </div>

@@ -170,6 +170,15 @@
   }
 }
 
+/* ─── Hide scrollbars globally ─────────────────────────── */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 .bg-gradient-accent {
   background: linear-gradient(135deg, hsl(240, 100%, 65%), hsl(270, 100%, 65%));
 }
