@@ -1,13 +1,15 @@
-import { Suspense, useRef, useState, useEffect, Component, type ReactNode } from "react";
+import { Suspense, useRef, useState, useEffect, Component, type ReactNode, useCallback } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars, Float, Environment } from "@react-three/drei";
 import * as THREE from "three";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "wouter";
-import { Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, Search, MapPin } from "lucide-react";
+import { Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, Search, MapPin, Maximize2, Minimize2, Crown, Shield, Wifi } from "lucide-react";
 import { LogoIcon } from "@/components/Logo";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+
+const LS_KEY = "ps_username";
 
 
 // ─── Analytics Lookup Component ───────────────────────────────────────────
@@ -269,6 +271,43 @@ function useWebGLSupport() {
 
 export default function Home() {
   const webgl = useWebGLSupport();
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [username, setUsername] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(LS_KEY) || "" : ""));
+  const [planTagVisible, setPlanTagVisible] = useState(() => !!(typeof window !== "undefined" && localStorage.getItem(LS_KEY)));
+
+  useEffect(() => {
+    const onStorage = () => {
+      const name = localStorage.getItem(LS_KEY) || "";
+      setUsername(name);
+      if (name) setPlanTagVisible(true);
+    };
+    window.addEventListener("storage", onStorage);
+    const interval = setInterval(() => {
+      const name = localStorage.getItem(LS_KEY) || "";
+      if (name !== username) { setUsername(name); if (name) setPlanTagVisible(true); }
+    }, 800);
+    return () => { window.removeEventListener("storage", onStorage); clearInterval(interval); };
+  }, [username]);
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      canvasRef.current?.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
+  const handleGetStarted = useCallback(() => {
+    setPlanTagVisible(true);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen" style={{ background: "#06081a", color: "#fff" }}>
       <Navbar />
@@ -332,7 +371,7 @@ export default function Home() {
                   className="flex flex-row items-center gap-2 sm:gap-3"
                 >
                   <Link href="/share">
-                    <button className="group inline-flex items-center gap-1.5 h-9 sm:h-11 px-5 sm:px-6 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
+                    <button onClick={handleGetStarted} className="group inline-flex items-center gap-1.5 h-9 sm:h-11 px-5 sm:px-6 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
                       Start for Free
                       <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
@@ -366,10 +405,10 @@ export default function Home() {
               </div>
 
               {/* Right — 3D Canvas */}
-              <div className="relative h-[200px] sm:h-[360px] md:h-[420px] lg:h-[560px]">
+              <div ref={canvasRef} className="relative h-[200px] sm:h-[360px] md:h-[420px] lg:h-[560px] group">
                 {webgl ? (
                   <WebGLErrorBoundary fallback={<CSS3DFallback />}>
-                    <Canvas camera={{ position: [0, 0, 5.5], fov: 50 }} style={{ borderRadius: "1.25rem" }}>
+                    <Canvas camera={{ position: [0, 0, 5.5], fov: 50 }} style={{ borderRadius: "1.25rem", width: "100%", height: "100%" }}>
                       <Suspense fallback={null}>
                         <Scene3D />
                       </Suspense>
@@ -378,6 +417,65 @@ export default function Home() {
                 ) : (
                   <CSS3DFallback />
                 )}
+
+                {/* ── Canvas UI Overlay Tags ── */}
+
+                {/* Top-left: WebGL / Interactive badge */}
+                <motion.div
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 text-[9px] sm:text-[10px] font-semibold tracking-wide"
+                >
+                  <Wifi className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-400" />
+                  <span className="hidden sm:inline">Interactive 3D</span>
+                  <span className="sm:hidden">3D Live</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                </motion.div>
+
+                {/* Top-right: Fullscreen button */}
+                <motion.button
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 }}
+                  onClick={toggleFullscreen}
+                  title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 hover:text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all text-[9px] sm:text-[10px] font-semibold"
+                >
+                  {isFullscreen
+                    ? <><Minimize2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /><span className="hidden sm:inline">Exit</span></>
+                    : <><Maximize2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /><span className="hidden sm:inline">Fullscreen</span></>}
+                </motion.button>
+
+                {/* Bottom-left: Shield status */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/50 border border-indigo-500/25 backdrop-blur-md text-[9px] sm:text-[10px] font-semibold"
+                >
+                  <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-indigo-400" />
+                  <span className="text-indigo-300">Shield Active</span>
+                </motion.div>
+
+                {/* Bottom-right: Current Plan tag — visible when user is known */}
+                <AnimatePresence>
+                  {planTagVisible && (
+                    <motion.div
+                      key="plan-tag"
+                      initial={{ opacity: 0, scale: 0.85, y: 8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.85 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                      className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/10 border border-amber-500/30 backdrop-blur-md text-[9px] sm:text-[10px] font-bold"
+                    >
+                      <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400" />
+                      <span className="text-amber-300">
+                        {username ? `${username.split(" ")[0]} · ` : ""}Free Plan
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Floating cards — hidden on mobile, shown sm+ */}
                 <div className="hidden sm:block">
