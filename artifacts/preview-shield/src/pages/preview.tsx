@@ -18,6 +18,8 @@ export default function Preview() {
   const [clientNameInput, setClientNameInput] = useState("");
   const [password, setPassword] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [devToolsOpen, setDevToolsOpen] = useState(false);
+  const [tabHidden, setTabHidden] = useState(false);
 
   const recordVisit = useRecordVisit();
   const recordedRef = useRef(false);
@@ -83,11 +85,26 @@ export default function Preview() {
     console.log(warnMsg, "color:#f87171;font-size:20px;font-weight:bold;", "color:#fca5a5;font-size:13px;");
     console.log("%cAttempting to extract or copy this content is a violation of the terms of service.", "color:#fca5a5;font-size:12px;");
 
+    // DevTools dimension detection — blur content if devtools panel is open
+    const detectDevTools = () => {
+      const widthDiff = window.outerWidth - window.innerWidth > 200;
+      const heightDiff = window.outerHeight - window.innerHeight > 200;
+      setDevToolsOpen(widthDiff || heightDiff);
+    };
+    const dtInterval = setInterval(detectDevTools, 1000);
+    detectDevTools();
+
+    // Tab visibility — blur when user switches away
+    const onVisibility = () => setTabHidden(document.hidden);
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       document.removeEventListener("contextmenu", noContextMenu);
       document.removeEventListener("dragstart", noDragStart);
       document.removeEventListener("selectstart", noSelect);
       document.removeEventListener("keydown", noKeys, true);
+      document.removeEventListener("visibilitychange", onVisibility);
+      clearInterval(dtInterval);
     };
   }, []);
 
@@ -321,6 +338,21 @@ export default function Preview() {
 
         {/* Canvas */}
         <main className="flex-1 relative flex items-center justify-center overflow-hidden p-4 md:p-8">
+          {/* DevTools / tab-switch blur overlay */}
+          {(devToolsOpen || tabHidden) && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-2xl">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-4">
+                <Lock className="w-8 h-8 text-red-400" />
+              </div>
+              <p className="text-white font-bold text-lg mb-1">Preview Hidden</p>
+              <p className="text-slate-400 text-sm text-center max-w-xs">
+                {devToolsOpen
+                  ? "Developer tools detected. Close them to continue viewing."
+                  : "Return to this tab to resume viewing."}
+              </p>
+            </div>
+          )}
+
           <div
             className="relative max-w-5xl w-full rounded-lg overflow-hidden bg-slate-900 shadow-2xl border border-slate-800"
             onContextMenu={(e) => e.preventDefault()}

@@ -68,6 +68,18 @@ function isExpired(preview: { expiresAt: Date | null }): boolean {
   return new Date() > new Date(preview.expiresAt);
 }
 
+// ── Input length guard (defence-in-depth beyond Zod) ─────────────────────
+function assertInputLengths(data: Record<string, unknown>): string | null {
+  const MAX = { freelancerName: 120, agencyName: 120, fileName: 255, password: 128, fileUrl: 2048, clientName: 120, userAgent: 512, referrer: 1024 };
+  for (const [key, max] of Object.entries(MAX)) {
+    const val = data[key];
+    if (typeof val === "string" && val.length > max) return `${key} exceeds maximum length of ${max}`;
+  }
+  if (typeof data.fileSize === "number" && data.fileSize > 200 * 1024 * 1024) return "fileSize exceeds 200 MB limit";
+  if (typeof data.expiresInHours === "number" && (data.expiresInHours < 1 || data.expiresInHours > 8760)) return "expiresInHours must be between 1 and 8760";
+  return null;
+}
+
 router.post("/previews", async (req, res): Promise<void> => {
   const parsed = CreatePreviewBody.safeParse(req.body);
   if (!parsed.success) {
@@ -76,6 +88,8 @@ router.post("/previews", async (req, res): Promise<void> => {
   }
 
   const data = parsed.data;
+  const lengthError = assertInputLengths(data as Record<string, unknown>);
+  if (lengthError) { res.status(400).json({ error: "validation_error", message: lengthError }); return; }
   const id = generateId();
   const ownerToken = randomBytes(16).toString("hex");
   const passwordHash = data.password ? hashPassword(data.password) : null;

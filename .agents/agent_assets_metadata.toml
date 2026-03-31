@@ -6,3 +6,9 @@ id = "WkIM3unPDODkbkWPm2RWk"
 uri = "file://README.md"
 type = "text"
 title = "PreviewShield — GitHub Documentation"
+
+[[outputs]]
+id = "je65bsa7MdHbsaJVkUqFr"
+uri = "file://SECURITY.md"
+type = "text"
+title = "PreviewShield — Security Architecture"

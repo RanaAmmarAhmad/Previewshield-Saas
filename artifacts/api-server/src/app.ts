@@ -95,7 +95,8 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// ── Stricter limiter for preview creation ─────────────────────────────────
+// ── Endpoint-specific rate limiters ──────────────────────────────────────
+// Preview creation: 10 per minute
 const createLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
@@ -103,8 +104,51 @@ const createLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "rate_limited", message: "Too many previews created. Please wait." },
 });
+// Dashboard lookup: 30 per minute (prevents owner-token brute-force)
+const dashboardLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "Too many dashboard lookups." },
+});
+// Stream (file serving): 60 per minute per IP
+const streamLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "Too many file requests." },
+});
+// Visit recording: 5 per preview per IP in 5 minutes
+const visitLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "Too many visit recordings." },
+});
+// Password attempts: 5 per minute per IP (brute-force protection)
+const passwordLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "Too many password attempts. Please wait." },
+});
+
 app.use("/api/previews", (req, res, next) => {
   if (req.method === "POST" && req.path === "/") return createLimiter(req, res, next);
+  if (req.method === "GET" && req.path === "/dashboard") return dashboardLimiter(req, res, next);
+  if (req.method === "GET" && /^\/[^/]+\/stream/.test(req.path)) return streamLimiter(req, res, next);
+  if (req.method === "POST" && /^\/[^/]+\/visit/.test(req.path)) return visitLimiter(req, res, next);
+  if (req.method === "GET" && req.query.password) return passwordLimiter(req, res, next);
+  next();
+});
+
+// ── Strip sensitive query params from logs (don't log passwords/tokens) ───
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  if (req.query.password) req.query.password = "[REDACTED]";
   next();
 });
 
