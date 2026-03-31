@@ -650,7 +650,7 @@ export default function Home() {
         </section>
 
         {/* ─── Pricing ──────────────────────────────────────────── */}
-        <section className="py-14 sm:py-20 md:py-28 relative overflow-hidden" style={{ background: "#06081a" }}>
+        <section id="pricing" className="py-14 sm:py-20 md:py-28 relative overflow-hidden" style={{ background: "#06081a" }}>
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-700/10 rounded-full blur-[100px]" />
           </div>

@@ -60,6 +60,7 @@ export function Navbar() {
     { name: "Home", path: "/" },
     { name: "Dashboard", path: "/dashboard" },
     { name: "How It Works", path: "/how-it-works" },
+    { name: "Pricing", path: "/#pricing" },
     { name: "About", path: "/about" },
   ];
 
@@ -71,18 +72,28 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.path}
-              className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                location === link.path ? "text-white" : "text-white/50 hover:text-white"
-              }`}
-            >
-              {link.name === "Dashboard" && <BarChart2 className="w-3.5 h-3.5 text-indigo-400" />}
-              {link.name}
-            </Link>
-          ))}
+          {navLinks.map((link) =>
+            link.path.startsWith("/#") ? (
+              <a
+                key={link.name}
+                href={link.path}
+                className="text-sm font-medium transition-colors text-white/50 hover:text-white"
+              >
+                {link.name}
+              </a>
+            ) : (
+              <Link
+                key={link.name}
+                href={link.path}
+                className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  location === link.path ? "text-white" : "text-white/50 hover:text-white"
+                }`}
+              >
+                {link.name === "Dashboard" && <BarChart2 className="w-3.5 h-3.5 text-indigo-400" />}
+                {link.name}
+              </Link>
+            )
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
