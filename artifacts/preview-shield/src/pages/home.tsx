@@ -395,18 +395,17 @@ export default function Home() {
                   <CSS3DFallback />
                 )}
 
-                {/* ── Canvas UI Overlay Tags ── */}
+                {/* ── Canvas UI Overlay Tags — desktop only ── */}
 
                 {/* Top-left: WebGL / Interactive badge */}
                 <motion.div
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 }}
-                  className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 text-[9px] sm:text-[10px] font-semibold tracking-wide"
+                  className="absolute top-3 left-3 z-10 hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 text-[10px] font-semibold tracking-wide"
                 >
-                  <Wifi className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-400" />
-                  <span className="hidden sm:inline">Interactive 3D</span>
-                  <span className="sm:hidden">3D Live</span>
+                  <Wifi className="w-3 h-3 text-green-400" />
+                  <span>Interactive 3D</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 </motion.div>
 
@@ -417,11 +416,11 @@ export default function Home() {
                   transition={{ delay: 0.7 }}
                   onClick={toggleFullscreen}
                   title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-                  className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 hover:text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all text-[9px] sm:text-[10px] font-semibold"
+                  className="absolute top-3 right-3 z-10 hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 hover:text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all text-[10px] font-semibold"
                 >
                   {isFullscreen
-                    ? <><Minimize2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /><span className="hidden sm:inline">Exit</span></>
-                    : <><Maximize2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /><span className="hidden sm:inline">Fullscreen</span></>}
+                    ? <><Minimize2 className="w-3 h-3" /><span>Exit</span></>
+                    : <><Maximize2 className="w-3 h-3" /><span>Fullscreen</span></>}
                 </motion.button>
 
                 {/* Bottom-left: Shield status */}
@@ -429,9 +428,9 @@ export default function Home() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.9 }}
-                  className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3 z-10 flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/50 border border-indigo-500/25 backdrop-blur-md text-[9px] sm:text-[10px] font-semibold"
+                  className="absolute bottom-3 left-3 z-10 hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-indigo-500/25 backdrop-blur-md text-[10px] font-semibold"
                 >
-                  <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-indigo-400" />
+                  <Shield className="w-3 h-3 text-indigo-400" />
                   <span className="text-indigo-300">Shield Active</span>
                 </motion.div>
 

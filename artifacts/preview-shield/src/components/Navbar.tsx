@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Menu, X, BarChart2, User, Check, Pencil, History, Crown, FileImage, FileText, Film, Clock, ExternalLink, Trash2 } from "lucide-react";
+import { Menu, X, BarChart2, User, Check, Pencil, History, Crown, FileImage, FileText, Film, Clock, ExternalLink, Trash2, AlertTriangle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { LogoFull } from "@/components/Logo";
 
@@ -133,13 +133,18 @@ function UsernameWidget() {
   const [name, setName] = useState(() => localStorage.getItem(LS_KEY) || "");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) { setEditing(false); setDraft(name); }
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setEditing(false);
+        setDraft(name);
+        setShowDeleteConfirm(false);
+      }
     };
     if (editing) document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
@@ -149,12 +154,22 @@ function UsernameWidget() {
     const t = draft.trim();
     if (t) { localStorage.setItem(LS_KEY, t); setName(t); }
     setEditing(false);
+    setShowDeleteConfirm(false);
+  };
+
+  const deleteAll = () => {
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_HISTORY_KEY);
+    setName("");
+    setDraft("");
+    setEditing(false);
+    setShowDeleteConfirm(false);
   };
 
   return (
     <div ref={wrapRef} className="relative">
       {!editing ? (
-        <button onClick={() => { setDraft(name); setEditing(true); }}
+        <button onClick={() => { setDraft(name); setEditing(true); setShowDeleteConfirm(false); }}
           className="flex items-center gap-2 h-8 pl-2.5 pr-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-sm text-white/70 hover:text-white"
           title="Set your display name">
           <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
@@ -167,14 +182,56 @@ function UsernameWidget() {
           <Pencil className="w-3 h-3 text-white/30 shrink-0 ml-0.5" />
         </button>
       ) : (
-        <div className="flex items-center gap-1.5">
-          <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") { setEditing(false); setDraft(name); } }}
-            placeholder="Your name" autoComplete="off"
-            className="h-8 w-32 rounded-md bg-white/10 border border-white/20 text-white text-sm px-2 outline-none focus:border-indigo-400 placeholder-white/30" />
-          <button onClick={save} className="w-8 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white">
-            <Check className="w-3.5 h-3.5" />
-          </button>
+        <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-[#0d1025]/95 backdrop-blur-xl shadow-2xl shadow-black/40 z-50 overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-white/5">
+            <p className="text-xs font-semibold text-white/70">Your display name</p>
+          </div>
+
+          {/* Name input */}
+          <div className="px-4 pt-3 pb-2 flex items-center gap-2">
+            <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") { setEditing(false); setDraft(name); setShowDeleteConfirm(false); } }}
+              placeholder="Your name" autoComplete="off"
+              className="flex-1 h-8 rounded-md bg-white/10 border border-white/20 text-white text-xs px-2.5 outline-none focus:border-indigo-400 placeholder-white/30" />
+            <button onClick={save} className="w-8 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white shrink-0" title="Save">
+              <Check className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Delete all section */}
+          <div className="px-4 pb-3">
+            {!showDeleteConfirm ? (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full flex items-center justify-center gap-1.5 h-7 rounded-lg border border-red-500/20 bg-red-500/5 hover:bg-red-500/15 hover:border-red-500/40 text-red-400/60 hover:text-red-400 transition-all text-[10px] font-semibold mt-1"
+              >
+                <Trash2 className="w-3 h-3" />
+                Delete all information & files
+              </button>
+            ) : (
+              <div className="mt-1 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5">
+                <div className="flex items-start gap-1.5 mb-2">
+                  <AlertTriangle className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-red-300 leading-relaxed">This will delete your saved name and all file history from this browser. This cannot be undone.</p>
+                </div>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 h-6 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 hover:text-white text-[10px] font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={deleteAll}
+                    className="flex-1 h-6 rounded-md bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold transition-colors"
+                  >
+                    Yes, delete all
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
