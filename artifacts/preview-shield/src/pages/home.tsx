@@ -4,59 +4,11 @@ import { Stars, Float, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, User, Check, Pencil, Search } from "lucide-react";
+import { Eye, Lock, Zap, CheckCircle2, BarChart2, Clock, Users, ArrowRight, Search, MapPin } from "lucide-react";
 import { LogoIcon } from "@/components/Logo";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
-const LS_KEY = "ps_username";
-
-function DarkUsernameWidget() {
-  const [name, setName] = useState(() => localStorage.getItem(LS_KEY) || "");
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(name);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) { setEditing(false); setDraft(name); }
-    };
-    if (editing) document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [editing, name]);
-
-  const save = () => {
-    const t = draft.trim();
-    if (t) { localStorage.setItem(LS_KEY, t); setName(t); }
-    setEditing(false);
-  };
-
-  return (
-    <div ref={wrapRef} className="relative">
-      {!editing ? (
-        <button onClick={() => { setDraft(name); setEditing(true); }}
-          className="flex items-center gap-2 h-8 px-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-sm text-white/70 hover:text-white"
-          title="Set your display name">
-          <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-          <span className="max-w-[90px] truncate font-medium">{name || "Set name"}</span>
-          <Pencil className="w-3 h-3 text-white/30 shrink-0" />
-        </button>
-      ) : (
-        <div className="flex items-center gap-1.5">
-          <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") { setEditing(false); setDraft(name); } }}
-            placeholder="Your name" autoComplete="off"
-            className="h-8 w-32 rounded-md bg-white/10 border border-white/20 text-white text-sm px-2 outline-none focus:border-indigo-400 placeholder-white/30" />
-          <button onClick={save} className="w-8 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white">
-            <Check className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── Analytics Lookup Component ───────────────────────────────────────────
 
@@ -74,45 +26,33 @@ function AnalyticsLookup() {
   };
 
   return (
-    <section className="py-16 relative overflow-hidden" style={{ background: "#06081a" }}>
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[600px] h-[200px] bg-indigo-600/10 rounded-full blur-[80px]" />
-      </div>
-      <div className="container mx-auto px-4 md:px-6 relative">
-        <div className="max-w-2xl mx-auto">
-          {/* Label */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
-              <BarChart2 className="w-4 h-4 text-indigo-400" />
+    <section className="py-8 sm:py-12 relative" style={{ background: "#080b1e" }}>
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="max-w-2xl mx-auto rounded-2xl border border-white/8 bg-white/5 p-4 sm:p-6">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-7 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
+              <BarChart2 className="w-3.5 h-3.5 text-indigo-400" />
             </div>
             <div>
-              <p className="text-xs text-indigo-400 font-semibold uppercase tracking-widest">Analytics Lookup</p>
-              <h2 className="text-white font-semibold text-lg leading-tight">Already shared a file? Check who viewed it.</h2>
+              <p className="text-white font-semibold text-sm">Already shared a file?</p>
+              <p className="text-white/40 text-xs">Enter your Tracking UID to see who viewed it.</p>
             </div>
           </div>
-
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1">
-              <input
-                value={ownerToken}
-                onChange={e => { setOwnerToken(e.target.value); setError(""); }}
-                placeholder="Paste your Tracking UID..."
-                autoComplete="off"
-                className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm px-4 outline-none focus:border-indigo-500 placeholder-white/30 transition-colors"
-              />
-            </div>
-            <button
-              type="submit"
-              className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 shrink-0"
-            >
-              <Search className="w-4 h-4" />
-              View Analytics
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <input
+              value={ownerToken}
+              onChange={e => { setOwnerToken(e.target.value); setError(""); }}
+              placeholder="Paste Tracking UID..."
+              autoComplete="off"
+              className="flex-1 h-9 rounded-lg bg-white/5 border border-white/10 text-white text-sm px-3 outline-none focus:border-indigo-500 placeholder-white/25 transition-colors min-w-0"
+            />
+            <button type="submit"
+              className="h-9 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all flex items-center gap-1.5 shrink-0">
+              <Search className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">View</span>
             </button>
           </form>
-          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-          <p className="text-white/30 text-xs mt-3">
-            Your Tracking UID was shown after you shared your file. It stays in your browser for easy access.
-          </p>
+          {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
         </div>
       </div>
     </section>
@@ -331,38 +271,11 @@ export default function Home() {
   const webgl = useWebGLSupport();
   return (
     <div className="flex flex-col min-h-screen" style={{ background: "#06081a", color: "#fff" }}>
-
-      {/* ─── Dark Navbar ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#06081a]/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <LogoIcon size={28} />
-            <span className="font-bold text-xl tracking-tight text-white">PreviewShield</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm font-medium text-white/60 hover:text-white transition-colors flex items-center gap-1.5">
-              <BarChart2 className="w-3.5 h-3.5 text-indigo-400" />
-              Dashboard
-            </Link>
-            {["How It Works", "About"].map((n) => (
-              <Link key={n} href={`/${n.toLowerCase().replace(/ /g, "-")}`} className="text-sm font-medium text-white/50 hover:text-white transition-colors">{n}</Link>
-            ))}
-          </nav>
-          <div className="hidden md:flex items-center gap-3">
-            <DarkUsernameWidget />
-            <Link href="/share">
-              <button className="h-9 px-5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/30">
-                Share File
-              </button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
+      <Navbar />
       <main className="flex-1">
 
         {/* ─── Hero ──────────────────────────────────────────────── */}
-        <section className="relative min-h-[92vh] flex items-center overflow-hidden">
+        <section className="relative min-h-[85vh] sm:min-h-[92vh] flex items-center overflow-hidden pt-6 sm:pt-0">
           {/* Background glow */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-indigo-700/20 rounded-full blur-[120px]" />
@@ -393,7 +306,7 @@ export default function Home() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6"
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-5"
                 >
                   Share files.{" "}
                   <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
@@ -416,17 +329,17 @@ export default function Home() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="flex flex-col sm:flex-row items-start gap-4"
+                  className="flex flex-row flex-wrap items-center gap-3"
                 >
                   <Link href="/share">
-                    <button className="group inline-flex items-center gap-2 h-13 px-8 py-3.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-base shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
+                    <button className="group inline-flex items-center gap-2 h-11 px-6 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-0.5">
                       Start for Free
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </Link>
                   <Link href="/how-it-works">
-                    <button className="h-13 px-8 py-3.5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold text-base transition-all">
-                      See How It Works
+                    <button className="h-11 px-5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition-all">
+                      How It Works
                     </button>
                   </Link>
                 </motion.div>
@@ -452,8 +365,8 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              {/* Right — 3D Canvas */}
-              <div className="relative h-[520px] lg:h-[620px]">
+              {/* Right — 3D Canvas (hidden on mobile) */}
+              <div className="relative h-[420px] lg:h-[580px] hidden md:block">
                 {webgl ? (
                   <WebGLErrorBoundary fallback={<CSS3DFallback />}>
                     <Canvas camera={{ position: [0, 0, 5.5], fov: 50 }} style={{ borderRadius: "1.5rem" }}>
@@ -505,10 +418,10 @@ export default function Home() {
         <AnalyticsLookup />
 
         {/* ─── Feature Cards ─────────────────────────────────────── */}
-        <section className="py-28 relative overflow-hidden" style={{ background: "#080b1e" }}>
+        <section className="py-14 sm:py-20 md:py-28 relative overflow-hidden" style={{ background: "#080b1e" }}>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#1e1b4b20_0%,_transparent_70%)] pointer-events-none" />
           <div className="container mx-auto px-4 md:px-6 relative">
-            <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
               <motion.p
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
@@ -600,7 +513,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className={`group relative p-7 rounded-2xl border ${feat.border} bg-gradient-to-br ${feat.color} backdrop-blur-sm hover:shadow-xl ${feat.glow} transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                  className={`group relative p-5 sm:p-6 rounded-2xl border ${feat.border} bg-gradient-to-br ${feat.color} backdrop-blur-sm hover:shadow-xl ${feat.glow} transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
                 >
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/2 rounded-2xl" />
                   <div className={`w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-5 ${feat.iconColor}`}>
@@ -615,7 +528,7 @@ export default function Home() {
         </section>
 
         {/* ─── Use Cases / Who is it for ─────────────────────────── */}
-        <section className="py-28 overflow-hidden" style={{ background: "#06081a" }}>
+        <section className="py-14 sm:py-20 md:py-28 overflow-hidden" style={{ background: "#06081a" }}>
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
               <motion.div
@@ -697,9 +610,9 @@ export default function Home() {
                   {/* Visitor list */}
                   <div className="space-y-2 mt-4">
                     {[
-                      { name: "Acme Corp", ip: "185.42.xx.xx", time: "2 min ago", color: "bg-green-400" },
-                      { name: "Studio X", ip: "94.201.xx.xx", time: "1 hour ago", color: "bg-indigo-400" },
-                      { name: "John Client", ip: "72.14.xx.xx", time: "4 hours ago", color: "bg-violet-400" },
+                      { name: "Acme Corp", ip: "185.42.xx.xx", loc: "New York, US", time: "2 min ago", color: "bg-green-400" },
+                      { name: "Studio X", ip: "94.201.xx.xx", loc: "London, UK", time: "1 hr ago", color: "bg-indigo-400" },
+                      { name: "John Client", ip: "72.14.xx.xx", loc: "Toronto, CA", time: "4 hrs ago", color: "bg-violet-400" },
                     ].map((v, i) => (
                       <div key={i} className="flex items-center gap-3 bg-white/3 rounded-xl p-3 border border-white/5">
                         <div className={`w-8 h-8 rounded-full ${v.color}/20 border border-white/10 flex items-center justify-center text-xs font-bold text-white`}>
@@ -707,7 +620,9 @@ export default function Home() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white truncate">{v.name}</p>
-                          <p className="text-xs text-white/40">{v.ip}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-white/40 flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5 text-indigo-400/60" />{v.loc}</span>
+                          </div>
                         </div>
                         <span className="text-xs text-white/30 shrink-0">{v.time}</span>
                       </div>
@@ -739,34 +654,18 @@ export default function Home() {
                 Join thousands of freelancers who use PreviewShield to protect their deliverables, track viewers, and close deals safely.
               </p>
               <Link href="/share">
-                <button className="group inline-flex items-center gap-2 h-14 px-10 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-lg shadow-2xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-1">
+                <button className="group inline-flex items-center gap-2 h-11 sm:h-14 px-7 sm:px-10 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm sm:text-lg shadow-2xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 hover:-translate-y-1">
                   Create Your First Preview
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
             </motion.div>
           </div>
         </section>
 
-        {/* ─── Footer ────────────────────────────────────────────── */}
-        <footer className="border-t border-white/5 py-10" style={{ background: "#06081a" }}>
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <LogoIcon size={22} />
-                <span className="font-bold text-white">PreviewShield</span>
-              </div>
-              <p className="text-white/30 text-sm">The professional layer between your work and untrustworthy clients.</p>
-              <div className="flex items-center gap-6">
-                {["Privacy Policy", "Terms", "Contact"].map((l) => (
-                  <Link key={l} href={`/${l.toLowerCase().replace(/ /g, "-")}`} className="text-white/30 hover:text-white/70 text-sm transition-colors">{l}</Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </footer>
-
       </main>
+
+      <Footer />
     </div>
   );
 }

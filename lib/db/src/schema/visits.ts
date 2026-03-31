@@ -9,6 +9,9 @@ export const visitsTable = pgTable("visits", {
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   referrer: text("referrer"),
+  city: text("city"),
+  region: text("region"),
+  country: text("country"),
   visitedAt: timestamp("visited_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -277,24 +277,24 @@ export default function Share() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-3 pt-4 border-t bg-slate-50/50 dark:bg-slate-900/20 rounded-b-xl">
-                <Link href={`/preview/${successData.id}`} target="_blank" className="w-full">
-                  <Button variant="outline" className="w-full">
-                    <ExternalLink className="w-4 h-4 mr-2" />Open Preview
-                  </Button>
-                </Link>
-                <Link href={dashboardUrl} className="w-full">
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-                    <BarChart2 className="w-4 h-4 mr-2" />View Analytics
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  className="w-full"
+              <CardFooter className="flex flex-col gap-2 pt-4 border-t border-white/5 rounded-b-xl">
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <a href={`/preview/${successData.id}`} target="_blank" rel="noopener noreferrer"
+                    className="h-9 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-colors">
+                    <ExternalLink className="w-3.5 h-3.5" />Preview
+                  </a>
+                  <Link href={dashboardUrl}>
+                    <button className="w-full h-9 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                      <BarChart2 className="w-3.5 h-3.5" />Analytics
+                    </button>
+                  </Link>
+                </div>
+                <button
+                  className="w-full h-8 rounded-lg text-white/40 hover:text-white/70 text-xs transition-colors"
                   onClick={() => { setSuccessData(null); setFileInfo(null); setFileUrl(""); form.reset({ freelancerName: form.getValues("freelancerName"), agencyName: "", password: "", expiresIn: "24" }); }}
                 >
-                  Create Another
-                </Button>
+                  + Create another preview
+                </button>
               </CardFooter>
             </Card>
           </div>

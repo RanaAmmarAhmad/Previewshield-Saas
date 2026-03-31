@@ -181,6 +181,9 @@ router.get("/previews/dashboard", async (req, res): Promise<void> => {
       id: v.id,
       clientName: v.clientName ?? null,
       ipAddress: v.ipAddress ?? null,
+      city: v.city ?? null,
+      region: v.region ?? null,
+      country: v.country ?? null,
       visitedAt: v.visitedAt,
     })),
   });
@@ -342,6 +345,26 @@ router.post("/previews/:id/visit", async (req, res): Promise<void> => {
     req.socket.remoteAddress ||
     null;
 
+  let city: string | null = null;
+  let region: string | null = null;
+  let country: string | null = null;
+
+  if (ipAddress && ipAddress !== "::1" && !ipAddress.startsWith("127.") && !ipAddress.startsWith("192.168.")) {
+    try {
+      const geoRes = await fetch(`http://ip-api.com/json/${ipAddress}?fields=status,city,regionName,country`, { signal: AbortSignal.timeout(3000) });
+      if (geoRes.ok) {
+        const geo = await geoRes.json() as { status: string; city?: string; regionName?: string; country?: string };
+        if (geo.status === "success") {
+          city = geo.city ?? null;
+          region = geo.regionName ?? null;
+          country = geo.country ?? null;
+        }
+      }
+    } catch {
+      // geo lookup failure is non-fatal
+    }
+  }
+
   const visitId = generateId();
   await db.insert(visitsTable).values({
     id: visitId,
@@ -350,6 +373,9 @@ router.post("/previews/:id/visit", async (req, res): Promise<void> => {
     ipAddress,
     userAgent: body.success ? (body.data.userAgent ?? null) : null,
     referrer: body.success ? (body.data.referrer ?? null) : null,
+    city,
+    region,
+    country,
   });
 
   res.json({ success: true, visitId });
