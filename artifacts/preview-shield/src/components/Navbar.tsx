@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Menu, X, BarChart2, User, Check, Pencil, History, Crown, FileImage, FileText, Film, Clock, ExternalLink, Trash2, AlertTriangle } from "lucide-react";
+import { Menu, X, BarChart2, User, Check, Pencil, History, Crown, FileImage, FileText, Film, Clock, ExternalLink, Trash2, AlertTriangle, Download, ShieldCheck, Lock } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { LogoFull } from "@/components/Logo";
 
@@ -51,6 +51,28 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const downloadCSV = () => {
+    if (history.length === 0) return;
+    const rows = [
+      ["File Name", "File Type", "Tracking ID", "Owner Token", "Created At"],
+      ...history.map(h => [
+        `"${h.fileName.replace(/"/g, '""')}"`,
+        h.fileType,
+        h.id,
+        h.ownerToken,
+        new Date(h.createdAt).toLocaleString(),
+      ]),
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `previewshield-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const removeItem = (id: string) => {
     const updated = history.filter(h => h.id !== id);
     localStorage.setItem(LS_HISTORY_KEY, JSON.stringify(updated));
@@ -69,7 +91,14 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex items-center gap-1.5">
           {history.length > 0 && (
-            <button onClick={clearAll} className="text-[10px] text-white/30 hover:text-red-400 transition-colors">Clear all</button>
+            <>
+              <button onClick={downloadCSV} title="Download tracking IDs as CSV"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-[9px] font-semibold transition-colors">
+                <Download className="w-2.5 h-2.5" />
+                Export
+              </button>
+              <button onClick={clearAll} className="text-[10px] text-white/30 hover:text-red-400 transition-colors">Clear all</button>
+            </>
           )}
           <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
             <X className="w-3.5 h-3.5" />
@@ -275,8 +304,30 @@ export function Navbar() {
     { name: "About", path: "/about" },
   ];
 
+  const bannerMsg = "🔒 Your username and file history are stored only in your browser — fully private. Files and credentials are securely stored on our server.";
+  const bannerItems = Array(6).fill(bannerMsg);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#06081a]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full bg-[#06081a]/90 backdrop-blur-md">
+      {/* Scrolling security banner */}
+      <div className="w-full overflow-hidden border-b border-white/5 bg-gradient-to-r from-indigo-950/60 via-[#0a0c20]/80 to-indigo-950/60 py-1.5">
+        <div className="flex whitespace-nowrap" style={{ animation: "marquee 40s linear infinite" }}>
+          {bannerItems.map((msg, i) => (
+            <span key={i} className="inline-flex items-center gap-2 px-8 text-[10px] text-white/40 font-medium tracking-wide shrink-0">
+              <ShieldCheck className="w-3 h-3 text-indigo-400/60 shrink-0" />
+              {msg}
+              <Lock className="w-2.5 h-2.5 text-green-400/50 shrink-0" />
+            </span>
+          ))}
+        </div>
+      </div>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+      <div className="border-b border-white/5">
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="shrink-0">
           <LogoFull dark />
@@ -330,6 +381,8 @@ export function Navbar() {
         <button className="md:hidden p-2 text-white/70 hover:text-white" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
+      </div>
+
       </div>
 
       {isOpen && (

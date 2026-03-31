@@ -402,7 +402,7 @@ export default function Home() {
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 }}
-                  className="absolute top-3 left-3 z-10 hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 text-[10px] font-semibold tracking-wide"
+                  className="absolute top-3 left-3 z-10 flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 text-[10px] font-semibold tracking-wide"
                 >
                   <Wifi className="w-3 h-3 text-green-400" />
                   <span>Interactive 3D</span>
@@ -416,7 +416,7 @@ export default function Home() {
                   transition={{ delay: 0.7 }}
                   onClick={toggleFullscreen}
                   title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-                  className="absolute top-3 right-3 z-10 hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 hover:text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all text-[10px] font-semibold"
+                  className="absolute top-3 right-3 z-10 flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-white/60 hover:text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all text-[10px] font-semibold"
                 >
                   {isFullscreen
                     ? <><Minimize2 className="w-3 h-3" /><span>Exit</span></>
@@ -428,7 +428,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.9 }}
-                  className="absolute bottom-3 left-3 z-10 hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-indigo-500/25 backdrop-blur-md text-[10px] font-semibold"
+                  className="absolute bottom-3 left-3 z-10 flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 border border-indigo-500/25 backdrop-blur-md text-[10px] font-semibold"
                 >
                   <Shield className="w-3 h-3 text-indigo-400" />
                   <span className="text-indigo-300">Shield Active</span>
